@@ -1,6 +1,7 @@
 import datetime
-import io
+import io, os
 from pathlib import Path
+from tkinter.constants import BROWSE
 
 import cv2
 import numpy as np
@@ -8,6 +9,27 @@ from matplotlib import pyplot as plt
 import PySimpleGUI as sg
 
 import imutils
+
+def get_tree_data(parent, dirname):
+    treedata = sg.TreeData()
+
+    # https://github.com/PySimpleGUI/PySimpleGUI/blob/master/DemoPrograms/Demo_Tree_Element.py#L26
+    def add_files_in_folder(parent, dirname):
+
+        files = os.listdir(dirname)
+        for f in files:
+            fullname = os.path.join(dirname, f)
+            if os.path.isdir(fullname):
+                treedata.Insert(parent, fullname, f, values=[])#, icon=folder_icon)
+                add_files_in_folder(fullname, fullname)
+            else:
+
+                treedata.Insert(parent, fullname, f, values=[
+                                os.stat(fullname).st_size])#, icon=file_icon)
+
+    add_files_in_folder(parent, dirname)
+
+    return treedata
 
 
 def draw_plot(img_f):
@@ -30,6 +52,9 @@ def draw_plot(img_f):
 original_image = [[sg.Image(filename='', key='-orginal_img-')]]
 modify_image = [[sg.Image(filename='', key='-modify_img-')]]
 
+image_layout = [[sg.Frame(title="Original", layout=original_image), sg.Frame(title="Modify", layout=modify_image)]]
+
+
 threshold_radio = sg.Radio('Threshold', 'Radio', size=(10, 1), key='-THRESHOLD-')
 threshold_slid = sg.Slider((0, 255), 128, 1, orientation='h', size=(30, 15), key='-thslid-')
 
@@ -46,7 +71,7 @@ canny_radio = sg.Radio('Canny', 'Radio', size=(10, 1), key='-CANNY-')
 canny_a = sg.Slider((0, 255), 128, 1, orientation='h', size=(15, 15), key='-CANNY SLIDER A-')
 canny_b = sg.Slider((0, 255), 128, 1, orientation='h', size=(15, 15), key='-CANNY SLIDER B-')
 
-read_layout = [[sg.Text("File:"), sg.InputText(key='-input_file-', enable_events=True, ),
+read_layout = [[sg.Text("  File:   "), sg.InputText(key='-input_file-', enable_events=True, ),
                 sg.FileBrowse('Browse', key='-file-', target="-input_file-",), sg.Button('Read', key='-read_file-')],
                 [sg.Text("Output:"), sg.InputText(key='-out_path-', enable_events=True,)],
                 [sg.Cancel(), sg.Button('Save',key='-save-',button_color=('black', '#4adcd6')), sg.ProgressBar(100, orientation='h', size=(20, 20),bar_color=("purple", "green"), key='-PROGRESS BAR-'), sg.Text("         ",key='-saved-')]]
@@ -61,10 +86,42 @@ setting_layout =[
 hist_graph = [[sg.Image(filename='', key='-hist_img-')]]
 
 
-layout_tot= [[sg.Frame(title='Read',layout=read_layout)],
-             [sg.Frame(title='Parameter', layout=setting_layout),sg.Frame(title='Histgram',layout=hist_graph)],
-             [sg.Frame(title='Original',layout=original_image),sg.Frame(title='Results',layout=modify_image),]]
+treedata = get_tree_data("", os.getcwd())
 
+tree_layout=[[sg.Tree(
+    data=treedata,
+    headings=[],
+    auto_size_columns=True,
+    num_rows=12,
+    col0_width=30,
+    key="-TREE-",
+    show_expanded=False,
+    enable_events=True)]]
+
+log = [[sg.Output(size=(60,15), font='Courier 8')]]
+
+tree_summary = [[sg.Frame(title="", layout=tree_layout), sg.Frame(title="", layout=log)]]
+
+
+layout_img= [
+    [sg.Frame(title='Read',layout=read_layout)],
+    [sg.Frame(title='Parameter', layout=setting_layout)],
+    [sg.Frame(title="Image", layout=image_layout)]
+    ]
+
+
+
+browse_layout = [[sg.Text("Folder: "), sg.InputText(key='-browse_folder-', enable_events=True),
+                    sg.FolderBrowse('Browse', key='-folder-', target="-browse_folder-"), sg.Button('OK', key="-read_folder-")]]
+
+logging_layout = [  [sg.Frame(title="Folder", layout=browse_layout)],
+                    [sg.Frame(title="",layout = tree_summary)],
+                    [sg.Text("Anything printed will display here!")]]
+
+layout = [[sg.Text('Demo Of (Almost) All Elements', size=(38, 1), justification='center', font=("Helvetica", 16), relief=sg.RELIEF_RIDGE, k='-TEXT HEADING-', enable_events=True)]]
+layout +=[[sg.TabGroup([[   sg.Tab('Input Elements', layout_img),
+                            sg.Tab('Output', logging_layout)]], key='-TAB GROUP-')]]
+layout_tot = layout
 
 READ_File = False
 
@@ -72,7 +129,7 @@ sg.theme('Dark Blue 3')
 
 window = sg.Window('Image Processing', layout_tot,
                    location=(10, 10),alpha_channel=1.0,
-                   no_titlebar=False,grab_anywhere=False).Finalize()
+                   no_titlebar=False,grab_anywhere=False, element_justification="center").Finalize()
 
 while True:
 
@@ -80,6 +137,12 @@ while True:
 
     if event in (None, 'Cancel'):
         break
+
+    elif event == "-read_folder-":
+        window["-TREE-"].update(values=get_tree_data("", values["-browse_folder-"]))
+
+    elif event == "-TREE-":
+        print(values["-TREE-"])
 
     elif event == '-read_file-':
         read_path = Path(values['-input_file-'])
@@ -93,7 +156,7 @@ while True:
         histbytes = draw_plot(read_img)
         window['-orginal_img-'].update(data=imgbytes)
         window['-modify_img-'].update(data=imgbytes)
-        window['-hist_img-'].update(data=histbytes)
+        # window['-hist_img-'].update(data=histbytes)
         READ_File = True
 
     if READ_File:    
@@ -129,9 +192,9 @@ while True:
         elif values['-CANNY-']:
             mod_img = cv2.Canny(read_img, values['-CANNY SLIDER A-'], values['-CANNY SLIDER B-'])
 
-        if not values['-CANNY-']:
-            histbytes = draw_plot(mod_img)
-            window['-hist_img-'].update(data=histbytes)
+        # if not values['-CANNY-']:
+            # histbytes = draw_plot(mod_img)
+            # window['-hist_img-'].update(data=histbytes)
 
         mod_imgbytes = cv2.imencode('.png', mod_img)[1].tobytes()
         window['-modify_img-'].update(data=mod_imgbytes)
