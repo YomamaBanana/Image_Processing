@@ -40,6 +40,24 @@ def define_layout():
                     [canny_radio, canny_a, canny_b]
                     ]
 
+    rgb_threshold = sg.Radio('Range', 'Radio', size=(10, 1), key='-RGB_THRESH-')
+    r_lower = sg.Slider((0, 255), 0, 1, orientation='h', size=(10, 15), key='-r_lower-')
+    g_lower = sg.Slider((0, 255), 0, 1, orientation='h', size=(10, 15), key='-g_lower-')
+    b_lower = sg.Slider((0, 255), 0, 1, orientation='h', size=(10, 15), key='-b_lower-')
+    r_upper = sg.Slider((0, 255), 255, 1, orientation='h', size=(10, 15), key='-r_upper-')
+    g_upper = sg.Slider((0, 255), 255, 1, orientation='h', size=(10, 15), key='-g_upper-')
+    b_upper = sg.Slider((0, 255), 255, 1, orientation='h', size=(10, 15), key='-b_upper-')
+
+    rgb_layout = [
+        [rgb_threshold, sg.Button('Reset', key="-rgb_reset-")],
+        [sg.Frame("Lower", layout=[[sg.Text("R"),r_lower],[sg.Text("G"), g_lower],[sg.Text("B"),b_lower]]), sg.Frame("Upper", layout=[[r_upper],[g_upper],[b_upper]])]
+    ]
+
+    front_hist =  [[sg.Image(filename='', key='-front_hist-')]]
+
+
+    layout_3 = [ [sg.Frame("test",rgb_layout), sg.Frame("", front_hist)]]
+
     read_layout = [[sg.Text("Folder: "), sg.InputText(key='-browse_folder-', enable_events=True, ),
                     sg.FolderBrowse('Browse', key='-file-', target="-browse_folder-"), sg.Button('Read', key='-read_folder-')],
                     [sg.Text("Output:"), sg.InputText(key='-out_path-', enable_events=True,)],
@@ -49,10 +67,11 @@ def define_layout():
     modify_image = [[sg.Image(filename='', key='-modify_img-')]]
 
     layout_2 = [[sg.Frame("Read", read_layout)],
-                [sg.Frame("Setting", setting_layout)],
+                [sg.Output(size=(55,2), font='Courier 8')],
+                [sg.Frame("Setting", setting_layout), sg.Frame("RGB_channels", layout_3)],
                 [sg.Frame(title="Original", layout=original_image),
                 sg.Frame(title="Modify", layout=modify_image)],
-                [sg.Output(size=(60,2), font='Courier 8')]
+                # []
                 ]
 
     # grey_image = 
@@ -174,7 +193,15 @@ def main():
                     window['-PROGRESS BAR-'].UpdateBar(i + 1)
                 cv2.imwrite(out_path, mod_img)
                 window['-saved-'].update(value="Saved!")
-                
+            
+            elif event == "-rgb_reset-":
+                lower = ["-r_lower-","-g_lower-","-b_lower-"]
+                upper = ["-r_upper-","-g_upper-","-b_upper-"]
+                for i in lower:
+                    window[i].update(value=0)
+                for j in upper:
+                    window[j].update(value=255)
+            
             elif values['-THRESHOLD-'] :
                 _, mod_img  = cv2.threshold(read_img, int(values['-thslid-']), 255, cv2.THRESH_BINARY)
                 window['-thslid-'].Update(int(values['-thslid-']))
@@ -203,9 +230,17 @@ def main():
             elif values['-CANNY-']:
                 mod_img = cv2.Canny(read_img, values['-CANNY SLIDER A-'], values['-CANNY SLIDER B-'])
 
+            elif values['-RGB_THRESH-']:
+                lower_range = (values["-b_lower-"], values["-g_lower-"], values["-r_lower-"])
+                upper_range = (values["-b_upper-"], values["-g_upper-"], values["-r_upper-"])
+                mask = cv2.inRange(read_img, lower_range, upper_range)
+                mod_img = cv2.bitwise_and(read_img, read_img, mask=mask)
+    
+            front_rgb_bytes = draw_hist(mod_img)
             mod_imgbytes = cv2.imencode('.png', mod_img)[1].tobytes()
             window['-modify_img-'].update(data=mod_imgbytes)
-           
+            window['-front_hist-'].update(data=front_rgb_bytes)
+
     window.close()
     exit(0)
 
