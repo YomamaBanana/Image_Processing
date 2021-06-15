@@ -21,7 +21,7 @@ def define_layout():
     hue_radio = sg.Radio('Hue', 'Radio', size=(10, 1), key='-HUE-')
     hue_slid = sg.Slider((0, 225), 0, 1, orientation='h', size=(30, 15), key='-HUE SLIDER-')
 
-    ehance_radio =  sg.Radio('Ehance', 'Radio', size=(10, 1), key='-ENHANCE-')
+    ehance_radio =  sg.Radio('Enhance', 'Radio', size=(10, 1), key='-ENHANCE-')
     ehance_slid = sg.Slider((1, 225), 0, 1, orientation='h', size=(30, 15), key='-ENHANCE SLIDER-')
 
     canny_radio = sg.Radio('Canny', 'Radio', size=(10, 1), key='-CANNY-')
