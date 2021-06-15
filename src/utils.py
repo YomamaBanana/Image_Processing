@@ -26,11 +26,11 @@ def get_tree_data(parent, dirname):
     return treedata
 
 def draw_hist(img_f):
-    plt.style.use('bmh')
+    plt.style.use('dark_background')
     plt.clf()
     histgram = cv2.calcHist([img_f], [0], None, [256], [0, 256])
     plt.figure()
-    plt.plot(histgram)
+    plt.plot(histgram, c="yellowgreen")
     plt.xlim([0, 256])
     plt.title('Histogram')
     plt.xlabel("RGB pixel")
@@ -43,6 +43,7 @@ def draw_hist(img_f):
     return item.getvalue()
 
 def draw_plot(img_f):
+    plt.style.use('dark_background')
     plt.clf()
     plt.figure(figsize=(3,2))
         
