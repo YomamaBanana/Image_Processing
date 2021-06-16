@@ -31,7 +31,16 @@ def define_layout():
     denoise_radio = sg.Radio('Denoise', 'Radio', size=(10, 1), key='-DENOISE-')
     denoise_level = sg.Slider((1, 20), 1, 1, orientation='h', size=(30, 15), key='-DENOISE LEVEL-')
 
+    rgb_radio = sg.Radio('RGB_range', 'Radio', size=(10, 1), key='-RGB_THRESH-')
+    r_lower = sg.Slider((0, 255), 0, 1, orientation='h', size=(10, 15), key='-r_lower-')
+    g_lower = sg.Slider((0, 255), 0, 1, orientation='h', size=(10, 15), key='-g_lower-')
+    b_lower = sg.Slider((0, 255), 0, 1, orientation='h', size=(10, 15), key='-b_lower-')
+    r_upper = sg.Slider((0, 255), 255, 1, orientation='h', size=(10, 15), key='-r_upper-')
+    g_upper = sg.Slider((0, 255), 255, 1, orientation='h', size=(10, 15), key='-g_upper-')
+    b_upper = sg.Slider((0, 255), 255, 1, orientation='h', size=(10, 15), key='-b_upper-')
+
     setting_layout =[
+                    [rgb_radio, ],
                     [threshold_radio, threshold_slid],
                     [hue_radio, hue_slid],
                     [blur_radio, blur_slid],
@@ -40,16 +49,8 @@ def define_layout():
                     [canny_radio, canny_a, canny_b]
                     ]
 
-    rgb_threshold = sg.Radio('Range', 'Radio', size=(10, 1), key='-RGB_THRESH-')
-    r_lower = sg.Slider((0, 255), 0, 1, orientation='h', size=(10, 15), key='-r_lower-')
-    g_lower = sg.Slider((0, 255), 0, 1, orientation='h', size=(10, 15), key='-g_lower-')
-    b_lower = sg.Slider((0, 255), 0, 1, orientation='h', size=(10, 15), key='-b_lower-')
-    r_upper = sg.Slider((0, 255), 255, 1, orientation='h', size=(10, 15), key='-r_upper-')
-    g_upper = sg.Slider((0, 255), 255, 1, orientation='h', size=(10, 15), key='-g_upper-')
-    b_upper = sg.Slider((0, 255), 255, 1, orientation='h', size=(10, 15), key='-b_upper-')
-
     rgb_layout = [
-        [rgb_threshold, sg.Button('Reset', key="-rgb_reset-")],
+        [sg.Button('Reset', key="-rgb_reset-")],
         [sg.Frame("Lower", layout=[[sg.Text("R"),r_lower],[sg.Text("G"), g_lower],[sg.Text("B"),b_lower]]), sg.Frame("Upper", layout=[[r_upper],[g_upper],[b_upper]])]
     ]
 
