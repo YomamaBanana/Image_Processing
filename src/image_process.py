@@ -39,8 +39,8 @@ def define_layout():
     g_upper = sg.Slider((0, 255), 255, 1, orientation='h', size=(10, 15), key='-g_upper-')
     b_upper = sg.Slider((0, 255), 255, 1, orientation='h', size=(10, 15), key='-b_upper-')
 
-    setting_layout =[
-                    [rgb_radio, ],
+    setting_layout =[   
+                    [rgb_radio],
                     [threshold_radio, threshold_slid],
                     [hue_radio, hue_slid],
                     [blur_radio, blur_slid],
@@ -57,7 +57,7 @@ def define_layout():
     front_hist =  [[sg.Image(filename='', key='-front_hist-')]]
 
 
-    layout_3 = [ [sg.Frame("test",rgb_layout), sg.Frame("", front_hist)]]
+    layout_3 = [ [sg.Frame("",rgb_layout), sg.Frame("", front_hist)]]
 
     read_layout = [[sg.Text("Folder: "), sg.InputText(key='-browse_folder-', enable_events=True, ),
                     sg.FolderBrowse('Browse', key='-file-', target="-browse_folder-"), sg.Button('Read', key='-read_folder-')],
@@ -67,8 +67,12 @@ def define_layout():
     original_image = [[sg.Image(filename='', key='-orginal_img-')]]
     modify_image = [[sg.Image(filename='', key='-modify_img-')]]
 
+
+    ML_layout = [[sg.Multiline(size=(55,4), disabled=True, font='courier 8', key='-ML-')]]
+
     layout_2 = [[sg.Frame("Read", read_layout)],
-                [sg.Output(size=(55,2), font='Courier 8')],
+                # [sg.Output(size=(55,2), font='Courier 8')],
+                [sg.Frame("Out", ML_layout)],
                 [sg.Frame("Setting", setting_layout), sg.Frame("RGB_channels", layout_3)],
                 [sg.Frame(title="Original", layout=original_image),
                 sg.Frame(title="Modify", layout=modify_image)],
@@ -77,7 +81,7 @@ def define_layout():
 
     # grey_image = 
 
-    graph_layout = [[sg.T('Anything that you would use for asthetics is in this tab!')],
+    graph_layout = [[sg.T('RGB and HSV Histogram plots of the original image.')],
                 [sg.Frame(title="RGB Channels", layout=[[sg.Image(filename='', key='-hist_rgb-')]]), sg.Frame(title="HSV Channels", layout=[[sg.Image(filename='', key='-hist_hsv-')]])],
                 [sg.Frame(title="GrayScale", layout=[[sg.Image(filename='', key='-gray_img-')]]), sg.Frame(title="Spectrum", layout=[[sg.Image(filename='', key='-fft_plot-')]])]
     ]
@@ -128,7 +132,8 @@ def main():
             read_path = Path(values['-TREE-'][0])
             _, file_ext = os.path.splitext(read_path) 
             if file_ext in [".jpg", ".png"]:
-                print(f"[-LOG-] Chosen: {read_path.stem} ({file_ext[1:]})")
+                window['-ML-'].print('[-LOG-]', background_color='green',text_color='white', end='')
+                window['-ML-'].print(f' Chosen: {read_path.stem} ({file_ext[1:]})')
                 READ_File = True
                 default_out = str(read_path).replace(str(read_path.stem),str(read_path.stem)+"_modified")
                 window['-out_path-'].Update(value=default_out)
@@ -140,17 +145,19 @@ def main():
                 window['-orginal_img-'].update(data=imgbytes)
                 window['-modify_img-'].update(data=imgbytes)
                 
-                histbytes = draw_rgb(read_img)
                 hsv_bytes = draw_hsv(read_img)
-                
-                window['-hist_rgb-'].update(data=histbytes)
                 window['-hist_hsv-'].update(data=hsv_bytes)
+                histbytes = draw_rgb(read_img)
+                window['-hist_rgb-'].update(data=histbytes)
+
 
             elif os.path.isdir(read_path):
-                print(f"[-LOG-] Chosen: {read_path.stem} (dir)")
+                window['-ML-'].print('[-LOG-]', background_color='green',text_color='white', end='')
+                window['-ML-'].print(f' Chosen: {read_path.stem} (dir)')
             else:
-                print("[Error] Invalid input.")
-
+                window['-ML-'].print('[ERROR]', background_color='red',text_color='white', end='')
+                window['-ML-'].print(f' Invalid File Extension. ({file_ext[1:]})', text_color='red')
+                
         elif event == 'About':
             print("[LOG] Clicked About!")
             sg.popup(
@@ -236,11 +243,13 @@ def main():
                 upper_range = (values["-b_upper-"], values["-g_upper-"], values["-r_upper-"])
                 mask = cv2.inRange(read_img, lower_range, upper_range)
                 mod_img = cv2.bitwise_and(read_img, read_img, mask=mask)
-    
-            front_rgb_bytes = draw_hist(mod_img)
+                
             mod_imgbytes = cv2.imencode('.png', mod_img)[1].tobytes()
             window['-modify_img-'].update(data=mod_imgbytes)
-            window['-front_hist-'].update(data=front_rgb_bytes)
+    
+            if not values['-CANNY-']:    
+                front_rgb_bytes = draw_hist(mod_img)
+                window['-front_hist-'].update(data=front_rgb_bytes)
 
     window.close()
     exit(0)
