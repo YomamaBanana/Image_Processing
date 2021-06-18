@@ -3,8 +3,7 @@ import os, cv2, io
 from pathlib import Path
 import imutils
 import matplotlib.pyplot as plt
-import numpy as np
-from scipy import fftpack
+
 
 from utils import *
 
@@ -78,8 +77,6 @@ def define_layout():
                 sg.Frame(title="Modify", layout=modify_image)],
                 # []
                 ]
-
-    # grey_image = 
 
     graph_layout = [[sg.T('RGB and HSV Histogram plots of the original image.')],
                 [sg.Frame(title="RGB Channels", layout=[[sg.Image(filename='', key='-hist_rgb-')]]), sg.Frame(title="HSV Channels", layout=[[sg.Image(filename='', key='-hist_hsv-')]])],
@@ -186,7 +183,8 @@ def main():
                 window['-fft_plot-'].update(data=specbytes)
             
             except:
-                print("[ERROR] No image selected.")
+                window['-ML-'].print('[ERROR]', background_color='red',text_color='white', end='')
+                window['-ML-'].print(f' No image selected.', text_color='red')
                 pass
         else:
             try:
