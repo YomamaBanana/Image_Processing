@@ -1,8 +1,9 @@
 import PySimpleGUI as sg
 import os, cv2, io
 import matplotlib.pyplot as plt
-# from scipy import fftpack
+from scipy import fftpack
 import numpy as np
+from matplotlib.colors import to_rgb
 
 def get_tree_data(parent, dirname):
     treedata = sg.TreeData()
@@ -59,7 +60,6 @@ def draw_hsv(img_f):
     plt.close('all')
     return item.getvalue()
 
-
 def draw_rgb(img_f):
     plt.style.use('dark_background')
     plt.clf()
@@ -94,3 +94,6 @@ def draw_spectrum(image):
     plt.close('all')
 
     return item.getvalue()
+
+def hex2rgb(hex):
+    return to_rgb(hex)

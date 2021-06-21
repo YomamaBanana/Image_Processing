@@ -3,12 +3,13 @@ import os, cv2, io, sys
 from PySimpleGUI.PySimpleGUI import Frame
 from pathlib import Path
 import imutils
+from matplotlib.colors import rgb_to_hsv
 import matplotlib.pyplot as plt
 from datetime import datetime
 
 from utils import *
 
-from color_chooser import main as testing
+from color_chooser import make_window as color_window
 
 tmp = [[sg.Image(filename='')]]
 
@@ -44,6 +45,14 @@ def define_layout():
     denoise_level = sg.Slider((1, 20), 1, 1, orientation='h', size=(20, 7), key='-DENOISE LEVEL-',enable_events=True, disable_number_display=True)
     denoise_value = sg.T('0', size=(4,1), key='-denoise_value-')
     
+    HSV_slider = sg.Column([
+        [sg.T("H",size=(1,1), font=("Helvetica", 8)), sg.T("S",size=(1,1), font=("Helvetica", 8)), sg.T("V",size=(1,1), font=("Helvetica", 8))],
+        [sg.Slider((0, 255), 0, 1, orientation='v', size=(8, 10), key='-H_value-',enable_events=True, disable_number_display=True),\
+            sg.Slider((0, 255), 0, 1, orientation='v', size=(8, 10), key='-S_value-',enable_events=True, disable_number_display=True),\
+                sg.Slider((0, 255), 0, 1, orientation='v', size=(8, 10), key='-V_value-',enable_events=True, disable_number_display=True)],
+        [sg.T("0",size=(2,1), font=("Helvetica", 6), k="-H-"), sg.T("0",size=(2,1), font=("Helvetica", 6), k="-S-"), sg.T("0",size=(2,1), font=("Helvetica", 6), k="-V-")]
+    ])
+    
     setting_layout =[
                     [none_radio],   
                     [threshold_radio, threshold_slid, threshold_value],
@@ -53,8 +62,9 @@ def define_layout():
                     [ehance_radio, ehance_slid, enhance_value],
                     [canny_radio,canny_a,canny_a_value, canny_b, canny_b_value],
                     [sg.Text("=====COlOR SPACE=====")],
-                    [sg.Combo(values=["RGB","HSV"], size=(10,5),default_value="RGB",k='-color_space-'), sg.Button("COLOR", k="-color_chooser-")],
-                    [sg.Image(filename="",k='-hist-')]
+                    [sg.Radio("HSV range","Radio", k="-hsv_range-"),sg.Combo(values=["RGB","HSV"], size=(10,5),default_value="RGB",k='-color_space-'), sg.ColorChooserButton("COLOR", k="-color_chooser-")],
+                    [HSV_slider,sg.Image(filename="",k='-hist-')],
+                []
                     ]
 
     menu_def = [['&Application', ['E&xit']],
@@ -115,6 +125,11 @@ def main():
         window['-denoise_value-'].update(int(values['-DENOISE LEVEL-']))
         window['-canny_a-'].update(int(values['-CANNY SLIDER A-']))
         window['-canny_b-'].update(int(values['-CANNY SLIDER B-']))
+        window['-H-'].update(int(values['-H_value-']))
+        window['-S-'].update(int(values['-S_value-']))
+        window['-V-'].update(int(values['-V_value-']))
+        
+        
         
     window = sg.Window(
         'Image_Processing_GUI', 
@@ -122,7 +137,8 @@ def main():
         location=(10, 10),
         alpha_channel=1.0,
         no_titlebar=False,
-        grab_anywhere=False, 
+        grab_anywhere=False,
+         resizable=True, 
         element_justification="left").Finalize()
     
     def_img = cv2.imread("../data/img/default.png")
@@ -140,6 +156,25 @@ def main():
         if event in (None, 'Cancel', 'Exit'):
             break
 
+        if event == "-color_chooser-":
+            c_window = color_window()
+            while True:
+                hex_color, b = c_window.read()
+                
+                if hex_color is not None:
+                    
+                    rgb_value = np.array(hex2rgb(hex_color[1]), dtype=float)
+                    r, g, b = rgb_value[0], rgb_value[1], rgb_value[2]
+
+                    window['-H_value-'].update(value=r)
+                    window['-S_value-'].update(value=g)
+                    window['-V_value-'].update(value=b)
+                    
+                
+                if hex_color == sg.WIN_CLOSED or hex_color is not None:
+                    break
+            c_window.close()
+        
         elif event == "-browse_folder-":
             window["-TREE-"].update(values=get_tree_data("", values["-browse_folder-"]))
 
@@ -168,6 +203,25 @@ def main():
             src_copy = np.copy(src_copy)
             histbytes = draw_hsv(src_copy)
             window["-hist-"].update(data=histbytes)
+            
+            # if window["-hsv_range-"] and :
+            if "r" in locals():
+                HSV = rgb_to_hsv((r,g,b))
+                
+                HSV[0], HSV[1], HSV[2]= HSV[0]*180, HSV[1]*255, HSV[2]*255
+                
+                print(HSV)
+                
+                ORANGE_MIN = np.array([5, 50, 50],np.uint8)
+                ORANGE_MAX = np.array([15, 255, 255],np.uint8)
+        
+                lower_blue = np.array([110,50,50])
+                upper_blue = np.array([130,255,255])
+                
+                mask = cv2.inRange(src_copy, ORANGE_MIN, ORANGE_MAX)
+                
+                res = cv2.bitwise_and(src,src,mask=mask)
+
             
         elif values["-color_space-"] == "RGB" and 'src_copy' in locals():
             src_copy = np.copy(src)
@@ -205,19 +259,17 @@ def main():
                     if values["-color_space-"] == "HSV" and not values['-CANNY-']:
                         histbytes = draw_hsv(mod_img)
                         window["-hist-"].update(data=histbytes)
+            elif values["-none-"] and values["-color_space-"] == "HSV" and "r" in locals():
+                res_imgbytes = cv2.imencode('.png', res)[1].tobytes()
+                window['-modify_img-'].update(data=res_imgbytes)
             else:
                 mod_imgbytes = cv2.imencode('.png', src_copy)[1].tobytes()
                 window['-modify_img-'].update(data=mod_imgbytes)
 
-        if event == "-color_chooser-":
-            # sg.Window("TEST", [[sg.Text("Hello Wordl")]], keep_on_top=True).read(timeout=0)
-            test = testing()
-            while True:
-                a, b = test.read()
-                print(a,b)
-                if a == sg.WIN_CLOSED:
-                    break
-            test.close()
+
+        
+        
+        
         update_slider_values()
         
         
