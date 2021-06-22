@@ -9,6 +9,9 @@ from datetime import datetime
 
 from utils import *
 import webcolors
+# import colorutils
+
+import colorsys
 
 tmp = [[sg.Image(filename='')]]
 
@@ -177,9 +180,7 @@ def main():
                     img_bytes = cv2.imencode('.png', src_resize)[1].tobytes()
                     window["-orginal_img-"].update(data=img_bytes)
         
-        if values["-hsv_range-"] and values["-lower_color-"] != "" and values["-lower_color-"] != "":
-            mask = (lower_hex, upper_hex)
-            print(mask)
+            
             
             
         if values["-lower_color-"] != "":
@@ -250,6 +251,23 @@ def main():
                 if "mod_img" in locals():    
                     mod_imgbytes = cv2.imencode('.png', mod_img)[1].tobytes()
                     window['-modify_img-'].update(data=mod_imgbytes)
+
+
+                    if values["-hsv_range-"] and values["-lower_color-"] != "" and values["-lower_color-"] != "":
+                        mask = (lower_hex, upper_hex)
+                        
+                        rgb = np.array(to_rgb(lower_hex), dtype=float)
+                        hsv = rgb2hsv(rgb)
+                        lower_range = np.array((hsv[0]*180, hsv[1]*255, hsv[2]*255), dtype=int)
+                        
+                        rgb = np.array(to_rgb(upper_hex), dtype=float)
+                        hsv = rgb2hsv(rgb)
+                        upper_range = np.array((hsv[0]*180, hsv[1]*255, hsv[2]*255), dtype=int)
+                        
+                        mask = cv2.inRange(mod_img, lower_range, upper_range)
+                        mod_img = cv2.bitwise_and(mod_img, mod_img, mask=mask)
+                    
+
 
                     if values["-color_space-"] == "RGB" and not values['-CANNY-']:
                         histbytes = draw_rgb(mod_img)
