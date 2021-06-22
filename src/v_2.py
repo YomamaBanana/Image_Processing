@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 
 from utils import *
+import webcolors
 
-from color_chooser import make_window as color_window
 
 tmp = [[sg.Image(filename='')]]
 
@@ -53,6 +53,13 @@ def define_layout():
         [sg.T("0",size=(2,1), font=("Helvetica", 6), k="-H-"), sg.T("0",size=(2,1), font=("Helvetica", 6), k="-S-"), sg.T("0",size=(2,1), font=("Helvetica", 6), k="-V-")]
     ])
     
+    range_button = sg.Column([
+        [sg.ColorChooserButton("LOWER", target="-lower_color-", font=("Helvetica", 8))],
+        [sg.InputText(key="-lower_color-",size=(8,1), font=("Helvetica", 8))],
+        [sg.ColorChooserButton("UPPER", target="-upper_color-", font=("Helvetica", 8))],
+        [sg.InputText(key="-upper_color-", size=(8,1),font=("Helvetica", 8))]
+    ])
+    
     setting_layout =[
                     [none_radio],   
                     [threshold_radio, threshold_slid, threshold_value],
@@ -62,9 +69,8 @@ def define_layout():
                     [ehance_radio, ehance_slid, enhance_value],
                     [canny_radio,canny_a,canny_a_value, canny_b, canny_b_value],
                     [sg.Text("=====COlOR SPACE=====")],
-                    [sg.Radio("HSV range","Radio", k="-hsv_range-"),sg.Combo(values=["RGB","HSV"], size=(10,5),default_value="RGB",k='-color_space-'), sg.ColorChooserButton("COLOR", k="-color_chooser-")],
-                    [HSV_slider,sg.Image(filename="",k='-hist-')],
-                []
+                    [sg.Radio("HSV range","Radio", k="-hsv_range-"),sg.Combo(values=["RGB","HSV"], size=(10,5),default_value="RGB",k='-color_space-')],
+                    [range_button,sg.Image(filename="",k='-hist-')],
                     ]
 
     menu_def = [['&Application', ['E&xit']],
@@ -83,7 +89,6 @@ def define_layout():
     
     col_1 = sg.Column([
         [sg.FolderBrowse('Browse', key='-file-', target="-browse_folder-")],
-        # [sg.Frame(title="Browser", layout=tree_layout)],
         [sg.Tree(data=treedata, headings=[], auto_size_columns=True, num_rows=20, col0_width=26, key="-TREE-", show_expanded=False, enable_events=True)],
         [sg.Frame(title="Original", layout=original_image)]
         ], vertical_alignment='top')
@@ -115,8 +120,7 @@ def define_layout():
 
 def main():    
     layout = define_layout()
-    
-        
+            
     def update_slider_values():
         window['-thes_value-'].update(int(values['-thslid-']))
         window['-blur_value-'].update(int(values['-BLUR SLIDER-']))
@@ -125,11 +129,6 @@ def main():
         window['-denoise_value-'].update(int(values['-DENOISE LEVEL-']))
         window['-canny_a-'].update(int(values['-CANNY SLIDER A-']))
         window['-canny_b-'].update(int(values['-CANNY SLIDER B-']))
-        window['-H-'].update(int(values['-H_value-']))
-        window['-S-'].update(int(values['-S_value-']))
-        window['-V-'].update(int(values['-V_value-']))
-        
-        
         
     window = sg.Window(
         'Image_Processing_GUI', 
@@ -156,25 +155,6 @@ def main():
         if event in (None, 'Cancel', 'Exit'):
             break
 
-        if event == "-color_chooser-":
-            c_window = color_window()
-            while True:
-                hex_color, b = c_window.read()
-                
-                if hex_color is not None:
-                    
-                    rgb_value = np.array(hex2rgb(hex_color[1]), dtype=float)
-                    r, g, b = rgb_value[0], rgb_value[1], rgb_value[2]
-
-                    window['-H_value-'].update(value=r)
-                    window['-S_value-'].update(value=g)
-                    window['-V_value-'].update(value=b)
-                    
-                
-                if hex_color == sg.WIN_CLOSED or hex_color is not None:
-                    break
-            c_window.close()
-        
         elif event == "-browse_folder-":
             window["-TREE-"].update(values=get_tree_data("", values["-browse_folder-"]))
 
@@ -198,13 +178,33 @@ def main():
                     img_bytes = cv2.imencode('.png', src_resize)[1].tobytes()
                     window["-orginal_img-"].update(data=img_bytes)
         
+        if values["-hsv_range-"] and values["-lower_color-"] != "" and values["-lower_color-"] != "":
+            mask = (lower_hex, upper_hex)
+            print(mask)
+            
+            
+        if values["-lower_color-"] != "":
+            try:
+                lower = webcolors.hex_to_name(values["-lower_color-"])
+            except:
+                lower = values["-lower_color-"]
+                lower_hex = values["-lower_color-"]
+            window["-lower_color-"].update(value=lower, background_color=values["-lower_color-"])
+
+        if values["-upper_color-"] != "":
+            try:
+                upper = webcolors.hex_to_name(values["-upper_color-"])
+            except:
+                upper = values["-upper_color-"]
+                upper_hex = values["-upper_color-"]
+            window["-upper_color-"].update(value=upper, background_color=values["-upper_color-"])
+
         if values["-color_space-"] == "HSV" and 'src_copy' in locals():
             src_copy = cv2.cvtColor(src, cv2.COLOR_BGR2HSV)
             src_copy = np.copy(src_copy)
             histbytes = draw_hsv(src_copy)
             window["-hist-"].update(data=histbytes)
             
-            # if window["-hsv_range-"] and :
             if "r" in locals():
                 HSV = rgb_to_hsv((r,g,b))
                 
@@ -221,7 +221,6 @@ def main():
                 mask = cv2.inRange(src_copy, ORANGE_MIN, ORANGE_MAX)
                 
                 res = cv2.bitwise_and(src,src,mask=mask)
-
             
         elif values["-color_space-"] == "RGB" and 'src_copy' in locals():
             src_copy = np.copy(src)
