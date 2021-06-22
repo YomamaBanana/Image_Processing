@@ -3,7 +3,7 @@ import os, cv2, io
 import matplotlib.pyplot as plt
 from scipy import fftpack
 import numpy as np
-from matplotlib.colors import to_rgb
+from matplotlib.colors import rgb_to_hsv, to_rgb
 
 def get_tree_data(parent, dirname):
     treedata = sg.TreeData()
@@ -97,3 +97,6 @@ def draw_spectrum(image):
 
 def hex2rgb(hex):
     return to_rgb(hex)
+
+def rgb2hsv(rgb):
+    return rgb_to_hsv(rgb)
