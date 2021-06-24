@@ -39,3 +39,15 @@ Standard python libraries for image processing which include:
 * Numpy for calculation
 
 [PySimpleGUI](https://pysimplegui.readthedocs.io/en/latest/) is used as the GUI engine for this project.
+
+# DEMO
+
+https://user-images.githubusercontent.com/51869912/123275596-6a6b3980-d53f-11eb-8eed-41401c4a314c.mp4
+
+>>>>>>> 9e28ccaef71211d7778d0fece58cccc0d22b24e2
+>>>>>>>
+>>>>>>
+>>>>>
+>>>>
+>>>
+>>
