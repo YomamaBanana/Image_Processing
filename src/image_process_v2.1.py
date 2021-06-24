@@ -204,6 +204,9 @@ def main():
     def_img = cv2.resize(def_img, (640,540))
     def_bytes = cv2.imencode('.png', def_img)[1].tobytes()
     window["-modify_img-"].update(data=def_bytes)
+    
+    hsv_cyclinder = cv2.imread("../data/img/hsv_cyclinder.png")
+
 
     window["-browse_folder-"].update(value=r"D:\Python\git\Python_GUI\data")
 
@@ -308,14 +311,27 @@ def main():
             
         if check_image_ok:
             mod_img = src_copy
+            
+            if not values["-hsv_range-"]:
+                window["-orginal_img-"].update(data=cv2.imencode('.png', src_resize)[1].tobytes())   
+            
             if values["-hsv_range-"]:
+                hsv_cyclinder = imutils.resize(hsv_cyclinder, width=235)
+
                 lower_range = np.array((values["-H_value-"], round(values["-S_value-"]*2.55), round(values["-V_value-"]*2.55)), dtype=int)
                 upper_range = np.array((values["-up_H_value-"], round(values["-up_S_value-"]*2.55), round(values["-up_V_value-"]*2.55)), dtype=int)
                 
                 try:   
                     img_hsv = cv2.cvtColor(src_copy, cv2.COLOR_RGB2HSV)
                     mask = cv2.inRange(img_hsv, lower_range, upper_range)
-                    mod_img = cv2.bitwise_and(src_copy, src_copy, mask=mask)            
+                    mod_img = cv2.bitwise_and(src_copy, src_copy, mask=mask)
+                    
+                    hsv_c = cv2.cvtColor(hsv_cyclinder, cv2.COLOR_RGB2HSV)
+                    hsv_mask = cv2.inRange(hsv_c, lower_range, upper_range)
+                    hsv_c = cv2.bitwise_and(hsv_cyclinder, hsv_cyclinder, mask=hsv_mask)
+                    
+                    img_bytes = cv2.imencode('.png', hsv_c)[1].tobytes()
+                    window["-orginal_img-"].update(data=img_bytes)            
                 except Exception as ex:
                     pass
             elif values['-THRESHOLD-']: 
