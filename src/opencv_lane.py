@@ -122,7 +122,7 @@ def threshold(channel, thresh=(128,255), thresh_type=cv2.THRESH_BINARY):
   # white (255), else set it to black (0)
   return cv2.threshold(channel, thresh[0], thresh[1], thresh_type)
 
-img_path = r"C:/Users/Adrian/Desktop/Shinmei/lane_sample/rgb/2021-04-22-10-36-56_rgb_00020.png"
+# img_path = 
 
 img = cv2.imread(img_path)
 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -165,57 +165,3 @@ plt.show()
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-exit()
-
-hsv_nemo = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
-# plt.imshow(hsv_nemo)
-
-light_orange = (0, 24, 100)
-dark_orange = (120, 255, 255)
-
-lo_square = np.full((10, 10, 3), light_orange, dtype=np.uint8) / 255.0
-do_square = np.full((10, 10, 3), dark_orange, dtype=np.uint8) / 255.0
-
-plt.subplot(1, 2, 1)
-plt.imshow(hsv_to_rgb(do_square))
-plt.subplot(1, 2, 2)
-plt.imshow(hsv_to_rgb(lo_square))
-
-plt.show()
-
-mask = cv2.inRange(hsv_nemo, light_orange, dark_orange)
-result = cv2.bitwise_and(img, img, mask=mask)
-
-plt.imshow(img)
-
-
-plt.subplot(1, 2, 1)
-plt.imshow(mask, cmap="gray")
-plt.subplot(1, 2, 2)
-plt.imshow(result)
-# r, g, b = cv2.split(img)
-# fig = plt.figure()
-# axis = fig.add_subplot(1, 1, 1, projection="3d")
-
-# pixel_colors = img.reshape((np.shape(img)[0]*np.shape(img)[1], 3))
-# norm = colors.Normalize(vmin=-1.,vmax=1.)
-# norm.autoscale(pixel_colors)
-# pixel_colors = norm(pixel_colors).tolist()
-
-# axis.scatter(r.flatten(), g.flatten(), b.flatten(), facecolors=pixel_colors, marker=".")
-# axis.set_xlabel("Red")
-# axis.set_ylabel("Green")
-# axis.set_zlabel("Blue")
-plt.show()

@@ -7,20 +7,11 @@ from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
 
 
 plt.style.use('dark_background')
-
-# plt.clf()
-
-# plt.yticks([])
-# plt.xticks(fontsize=8)
-# plt.xlim([0, 256])
-
-
 plt.rcParams['lines.linewidth'] = 0.6
 plt.rcParams['ytick.left'] = False
 
 def get_tree_data(parent, dirname):
     treedata = sg.TreeData()
-
     # https://github.com/PySimpleGUI/PySimpleGUI/blob/master/DemoPrograms/Demo_Tree_Element.py#L26
     def add_files_in_folder(parent, dirname):
 
@@ -80,7 +71,6 @@ def draw_hist(image):
     return gray, eq_grayscale_image, item.getvalue()
 
 def draw_hsv(img_f):
-    # img_f = cv2.cvtColor(img_f, cv2.COLOR_BGR2HSV)
     plt.style.use('dark_background')
     plt.clf()
     plt.figure(figsize=(3,2))
