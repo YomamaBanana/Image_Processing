@@ -96,7 +96,7 @@ def define_layout():
     original_image = [[sg.Image(filename='', key='-orginal_img-')]]
     modify_image = [[sg.Image(filename='', key='-modify_img-')]]
 
-    treedata = get_tree_data("", r"D:\Python\git\Python_GUI\data")
+    treedata = get_tree_data("", os.getcwd())
 
     read_layout = [[sg.Text("Folder: "), sg.InputText(key='-browse_folder-', enable_events=True, ),],
                     [sg.Text("Output:"), sg.InputText(key='-out_path-', enable_events=True,)],
