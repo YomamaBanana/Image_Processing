@@ -20,6 +20,8 @@ The main objective of this image processing GUI is to provide a quick and dirty 
 
 Although this program will run (hopefully), it has not been optimized nor has it been finialized.
 
+And them photos are from the [FLIR dataset](https://www.flir.com/oem/adas/adas-dataset-form/).
+
 # TO-DOs
 
 1. Enable objection detection.
@@ -37,5 +39,3 @@ Standard python libraries for image processing which include:
 * Numpy for calculation
 
 [PySimpleGUI](https://pysimplegui.readthedocs.io/en/latest/) is used as the GUI engine for this project.
-
-# DEMO
