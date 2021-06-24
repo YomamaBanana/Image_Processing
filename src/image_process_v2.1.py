@@ -1,9 +1,5 @@
-from calendar import c
-from tkinter import EXCEPTION
-from tkinter.constants import W
 import PySimpleGUI as sg
-import os, cv2, io, sys
-from PySimpleGUI.PySimpleGUI import Frame
+import os, cv2
 from pathlib import Path
 import imutils
 import matplotlib.pyplot as plt
@@ -13,12 +9,10 @@ import time
 
 from utils import *
 
-
 plt.style.use('dark_background')
 plt.rcParams['lines.linewidth'] = 0.6
 plt.rcParams['ytick.labelleft'] = False
 plt.rcParams['axes.titlesize'] = 10
-
 
 def define_layout():
     sg.theme('DarkGrey9')
@@ -146,7 +140,10 @@ def define_layout():
 
     return layout
 
-def main():    
+def main():  
+    
+    sg.popup_quick_message('Loading... please wiat...', background_color='gray', text_color='white', font='Any 14') 
+    time.sleep(1)     
     layout = define_layout()
             
     def update_info():
