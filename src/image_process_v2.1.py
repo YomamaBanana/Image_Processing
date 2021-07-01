@@ -100,7 +100,7 @@ def define_layout():
 
     read_layout = [[sg.Text("Folder: "), sg.InputText(key='-browse_folder-', enable_events=True, ),],
                     [sg.Text("Output:"), sg.InputText(key='-out_path-', enable_events=True,)],
-                    [sg.Cancel(), sg.Button('Save',key='-save-',button_color=('black', '#4adcd6')), sg.ProgressBar(100, orientation='h', size=(24, 20),bar_color=("dark blue", "light gray"), key='-PROGRESS BAR-')],
+                    [sg.Cancel(button_color="red"), sg.Button('Save',key='-save-',button_color=('black', '#4adcd6')), sg.ProgressBar(100, orientation='h', size=(24, 20),bar_color=("dark blue", "light gray"), key='-PROGRESS BAR-')],
                     [sg.Image(filename='', key="-mod_img-")]
                     ]
     
@@ -135,7 +135,7 @@ def define_layout():
                     [sg.Text('',size=(150,1), justification='right', font=("Helvetica", 10), k="-time-")]]
 
     layout +=[[sg.TabGroup([[   sg.Tab('Image_Processing', page_1_layout),
-                                # sg.Tab('Plots', graph_layout)
+                                sg.Tab('Test', [[sg.Image(filename="")]])
                                 ]], key='-TAB GROUP-')]]
 
     return layout
@@ -220,6 +220,7 @@ def main():
             break
 
         elif event == "-browse_folder-":
+            sg.popup_quick_message('Updating folder... Please wiat...', background_color='dark blue', text_color='white', font='Any 14')
             window["-TREE-"].update(values=get_tree_data("", values["-browse_folder-"]))
 
         elif event == "-TREE-":
@@ -230,7 +231,8 @@ def main():
                 try:
                     src = cv2.imread(str(img_path))
                     img_width, img_height = src.shape[1], src.shape[0]
-                    src_main = imutils.resize(src, width=640)
+                    # src_main = imutils.resize(src, width=640)
+                    src_main = cv2.resize(src, (640,480))
                     src_copy = np.copy(src_main)
                     src_resize = imutils.resize(src, width=235)
                     window["-none-"].update(value=True)
@@ -304,6 +306,7 @@ def main():
             progress_bar.UpdateBar(0)
             
         elif event == "-refresh-":
+            sg.popup_quick_message('Updating folder... Please wiat...', background_color='dark blue', text_color='white', font='Any 14')
             window["-TREE-"].update(values=get_tree_data("", values["-browse_folder-"]))
             
         if check_image_ok:

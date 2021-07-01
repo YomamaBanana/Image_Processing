@@ -14,8 +14,8 @@ import scipy.cluster
 
 plt.style.use("ggplot")
 
-# img_path = r'D:\Python\git\Python_GUI\data\img\FLIR_09312.jpg'
-img_path = r'C:\Users\ipx\Desktop\Personal\Python_GUI\data\img\FLIR_09312.jpg'
+img_path = r'D:\Python\git\Python_GUI\data\img\FLIR_09312.jpg'
+# img_path = r'C:\Users\ipx\Desktop\Personal\Python_GUI\data\img\FLIR_09312.jpg'
 # img_path = r'C:\Users\ipx\Desktop\Personal\Python_GUI\data\img\test.png'
 
 
@@ -105,7 +105,9 @@ elbow_plot = pd.DataFrame({'num_clusters' : np.arange(1,20),
 
 import seaborn as sns
 sns.lineplot(x = 'num_clusters', y = 'distortions', data = elbow_plot)
-# plt.show()
+plt.show()
+exit()
+
 # plt.clf()
 
 print('reading image')

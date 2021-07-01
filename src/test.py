@@ -12,8 +12,6 @@ from sklearn.mixture import BayesianGaussianMixture
     3. Apply Gaussaian Mixture
     4. Choose top 5 
     5. Plot results
-
-
 """
 
 
