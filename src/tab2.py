@@ -1,3 +1,4 @@
+from tkinter.constants import S
 import PySimpleGUI as sg
 import cv2, io
 import matplotlib.pyplot as plt
@@ -7,7 +8,6 @@ import scipy.cluster
 import numpy as np
 from sklearn.mixture import BayesianGaussianMixture
 
-plt.style.use("ggplot")
 
 def elbow_plot(image, max_clusters=20):
     plt.close("all")
@@ -96,16 +96,24 @@ def plot_histogram(centroids, counts):
     return list1, list2, item.getvalue()
 
 def plot_top_colors(centroids, idx,array, vecs, shape):
+    plt.style.use("dark_background")
+    
     plt.clf()
+    plt.figure(figsize=(2,2))
     plt.axis("off")
     res = np.ones_like(array)
     res[scipy.r_[np.where(vecs==idx)],:] = centroids
     res = np.array(res.reshape(*shape), dtype=int) 
     plt.imshow(res)
-    plt.show()      
 
+    item = io.BytesIO()
+    plt.savefig(item, format="png")
+    plt.close("all")
+    
+    return item.getvalue()
 
 def tab2_layout():
+    sg.theme('DarkGrey9')
     
     top5_layout = [[
         sg.Image(filename="", key="top1", enable_events=True),
@@ -115,33 +123,53 @@ def tab2_layout():
         sg.Image(filename="", key="top5", enable_events=True),        
     ]]
     
-    image_layout = [[
-        sg.Image(filename="", key="image", enable_events=True)
-    ]]
+    poly_layout = sg.Column([
+            [sg.Text("ax^3: ",size=(5,1), justification='right'), sg.InputText("a",size=(5,4), background_color="gray",text_color="black", disabled=True, k="poly_a", justification='right')],
+            [sg.Text("bx^2: ",size=(5,1), justification='right'), sg.InputText("b",size=(5,4), background_color="gray",text_color="black", disabled=True, k="poly_b", justification='right')],
+            [sg.Text("cx: ",size=(5,1), justification='right'), sg.InputText("c",size=(5,4), background_color="gray",text_color="black", disabled=True, k="poly_c", justification='right')],
+            [sg.Text("d: ",size=(5,1), justification='right'), sg.InputText("d",size=(5,4), background_color="gray",text_color="black", disabled=True, k="poly_d", justification='right')],       
+    ], vertical_alignment='top')
+    
+    roots_layout = sg.Column([
+        [sg.Text("",size=(8,1)),sg.Text("x",size=(3,1), justification='right')],
+        [sg.Text("Extrema",size=(8,1), justification='right'), sg.InputText("a",size=(5,4), background_color="gray",text_color="black", disabled=True, k="roots_1", justification='right')],
+        [sg.Text("",size=(8,1), justification='right'), sg.InputText("a",size=(5,4), background_color="gray",text_color="black", disabled=True, k="roots_2", justification='right')],
+        [sg.Text("Points of Inflection",size=(8,2), justification='right'), sg.InputText("a",size=(5,4), background_color="gray",text_color="black", disabled=True, k="roots_3", justification='right')], 
+    ], vertical_alignment='top')
+    
+    image_layout = [
+            [sg.Text("===== ELBOW PLOT =====")],
+            [sg.Text("Max num of clusters: "), sg.InputText(default_text="1", size=(6,4), k="t2-max_clus", justification='right'), sg.Button('Plot', k="plot_elbow")],
+            [sg.Text("3rd degree approximation:")],
+            [poly_layout, roots_layout],
+            [],
+            [sg.Image(filename="", key="t2-image", enable_events=True)]
+            ]
     
     elbow_layout = [
         [sg.Image(filename="", key ="elbow")], [sg.Image(filename="", key ="color")]
         ]
         
     col_1 = sg.Column([
-        [sg.Frame("Testing", image_layout)],
-        [sg.Frame("Plots", elbow_layout)],
+        [sg.Frame("Main", image_layout)],
         [sg.Frame("TOP5", top5_layout)]
         
         ], vertical_alignment='top')
     
     col_2 = sg.Column([
-        [sg.Button('Analyze', k="plot_elbow")],
-        [sg.Button('COLOR', k="plot_top5")]
+        # [sg.Button('Analyze', k="plot_elbow")],
+        # [sg.Button('COLOR', k="plot_top5")],
+        [sg.Frame("Plots", elbow_layout)]
     ], vertical_alignment='top')
     
+    col_3 = sg.Column(
+        [[sg.Button('COLOR', k="plot_top5")],],
+        vertical_alignment='top')
     
-    layout = [[col_1, col_2]]
+    layout = [[col_1, col_2, col_3]]
     
 
     return layout
-
-
 
 def main():
 
@@ -169,7 +197,7 @@ def main():
         element_justification="left").Finalize()    
     
     
-    window["image"].update(data=img_bytes)
+    window["t2-image"].update(data=img_bytes)
     
     while True:
         event, values = window.read(timeout=100)
@@ -192,12 +220,12 @@ def main():
 
             window["color"].update(data=color_plot)
 
-            # print(centroids[0])
+            top_colors = []
 
-            u = 2
+            for color in range(1,6):
+                fig = plot_top_colors(centroids[color], color, array, vecs, shape)
+                window[f"top{color}"].update(data=fig)
             
-            plot_top_colors(centroids[u],u,array, vecs, shape)
-
 
         
         if event == "image":

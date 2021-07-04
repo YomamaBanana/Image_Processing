@@ -2,6 +2,8 @@ import PySimpleGUI as sg
 import os, cv2, io
 import matplotlib.pyplot as plt
 from scipy import fftpack
+import scipy
+import scipy.cluster
 import numpy as np
 from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
 
@@ -130,3 +132,49 @@ def hsv2rgb(hsv):
 
 def rgb2hex(rgb):
     return '#%02x%02x%02x' % rgb
+
+
+
+def elbow_plot(image, max_clusters=20):
+    plt.close("all")
+    plt.clf()
+    plt.rcParams['ytick.labelleft'] = True
+    
+    plt.figure(figsize=(6,4))
+    import pandas as pd
+    import numpy as np
+    
+    array = np.asarray(image)
+    shape = array.shape
+    
+    array = array.reshape(np.product(shape[:2]), shape[2]).astype(float)
+    
+    distoration = []    
+    for cluster in range(1, max_clusters):
+        _, dist = scipy.cluster.vq.kmeans(array, cluster)
+        distoration.append(dist)
+
+    x = np.arange(1,max_clusters)
+    y = np.array(distoration)
+    
+    plt.plot(x,y)
+    
+    plt.ylabel("distortion")
+    plt.xlabel("clusters (n)")
+    # plt.xticks(range(1,max_clusters))
+    # plt.yticks(range(0,100))
+    
+    item = io.BytesIO()
+    plt.savefig(item, format="png")
+    plt.close("all")
+    plt.rcParams['ytick.labelleft'] = False
+    
+    return x, y, item.getvalue()    
+
+def polyfit3d(x,y):
+    z = np.polyfit(x,y,3) 
+    
+    order_2 = np.roots([6*z[0],2*z[1]])
+    order_1 = np.roots([3*z[0], 2*z[1], z[2]])
+
+    return z, order_1, order_2
