@@ -18,8 +18,8 @@ from sklearn.mixture import BayesianGaussianMixture
 
 def read_image(img_path):
     img = cv2.imread(img_path)
-    # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    # img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     return img
 
 def preprocess(img, *params):
@@ -56,6 +56,8 @@ def plot_histogram(centroids, counts):
     list1 = [x for x,_ in sorted(zip(new_center, new_count), key = lambda pair: pair[1], reverse=True)]
     list2 = sorted(new_count, reverse=True)
     
+    print(list1)
+    print(list2)
     
     fig, axs = plt.subplots(row,col)
     fig.subplots_adjust(wspace=0.05, hspace=0.05)
@@ -72,21 +74,9 @@ def plot_histogram(centroids, counts):
         axs[i].imshow([[np.array(list1[i], dtype=int)]], aspect='auto')
         
     return fig
-
-    
-    # print(tmp)
-    # print(tmp2)
-    
-    # fig, ax = plt.subplots(1,1)
-    # for idx, (k,v) in enumerate(zip(centroids,counts)):    
-    #     ax.hist([idx]*round(100*v/(np.sum(counts))), color=k/255, rwidth=19)
-    # # plt.xticks(np.arange(len(counts)))
-    # return fig
     
 def plot_result(centroids, array, vecs, shape):
     # plt.clf()
-    
-    
     for idx, color in enumerate(centroids):
         fig, ax = plt.subplots(1,1)
         ax.set_axis_off()
@@ -111,7 +101,7 @@ def main():
     plt.show()
 
     plot_result(centroids, array, vecs, shape)
-
+    plt.show()
 
 def hashing():
     # img_path = r'C:\Users\ipx\Desktop\Personal\Python_GUI\data\img\test.png'
@@ -173,5 +163,5 @@ def hashing():
 
 
 if __name__ == "__main__":
-    # main()    
-    hashing()
+    main()    
+    # hashing()
