@@ -5,8 +5,9 @@ from scipy import fftpack
 import scipy
 import scipy.cluster
 import numpy as np
+import binascii
 from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
-
+from sklearn.mixture import BayesianGaussianMixture
 
 plt.style.use('dark_background')
 plt.rcParams['lines.linewidth'] = 0.6
@@ -133,8 +134,6 @@ def hsv2rgb(hsv):
 def rgb2hex(rgb):
     return '#%02x%02x%02x' % rgb
 
-
-
 def elbow_plot(image, max_clusters=20):
     plt.close("all")
     plt.clf()
@@ -178,3 +177,115 @@ def polyfit3d(x,y):
     order_1 = np.roots([3*z[0], 2*z[1], z[2]])
 
     return z, order_1, order_2
+
+    
+def plot_top_colors(centroids, idx,array, vecs, shape, counts, indices):
+    plt.style.use("dark_background")
+    
+    ratio = 100*counts[indices[idx]]/np.sum(counts)
+        
+    plt.clf()
+    plt.figure(figsize=(2,2))
+    plt.axis("off")
+    plt.title(f"TOP {idx+1}: {ratio[0]:.1f}%")
+    res = np.ones_like(array)
+    res[scipy.r_[np.where(vecs==indices[idx])],:] = centroids
+    res = np.array(res.reshape(*shape), dtype=int) 
+    plt.imshow(res)
+
+    item = io.BytesIO()
+    plt.savefig(item, format="png")
+    plt.close("all")
+    
+    return item.getvalue()
+
+def plot_color_histogram(centroids, counts):
+    plt.style.use("dark_background")
+    plt.clf()
+    
+    new_center = centroids[np.where(counts>0)]
+    new_count = counts[np.where(counts>0)]
+    
+    row = len(new_count)
+    col = 1
+    
+    list1 = [x for x,_ in sorted(zip(new_center, new_count), key = lambda pair: pair[1], reverse=True)]
+    list2 = sorted(new_count, reverse=True)
+    
+    indices = []
+    for i, (l1, l2) in enumerate(zip(list1, list2)):
+        index = np.where(counts == l2)
+        indices.append(index)
+    
+    
+    fig, axs = plt.subplots(col,row, figsize=(6,3))
+    fig.subplots_adjust(wspace=0.05, hspace=0.05)
+    axs = axs.flatten()
+    
+    axs[0].set_ylabel("R\nG\nB", rotation=0)
+    
+    for i in range(len(new_center)):
+        
+        percentage = 100*list2[i]/np.sum(list2)
+        
+        axs[i].set_title(f'{percentage:.1f}%', fontsize=8)
+        axs[i].set_xticks([])
+        axs[i].set_yticks([])
+        axs[i].set_xlabel(i+1)
+        for idx, x in enumerate(np.array(list1[i], dtype=int)):
+            axs[i].text(0,idx*0.1-0.2,f'{x}',
+            bbox={'facecolor':'white','alpha':1,'edgecolor':'none','pad':1},
+            ha='center', va='center', fontsize=8, color="k")
+        axs[i].imshow([[np.array(list1[i], dtype=int)]], aspect='auto')
+    
+    item = io.BytesIO()
+    plt.savefig(item, format="png")
+    plt.close("all")
+        
+    return list1, list2, indices, item.getvalue()
+
+def gaussian_mixture(image, *params):
+    
+    img = cv2.resize(image, (150,150))
+
+    ar = np.asarray(img)
+    shape = ar.shape
+    array = ar.reshape(np.product(shape[:2]), shape[2]).astype(float)
+    
+    bgm = BayesianGaussianMixture(
+        n_components=20, 
+        random_state=1, 
+        weight_concentration_prior_type="dirichlet_process", 
+        init_params="kmeans",
+        covariance_type="full")
+
+    bgm.fit(array)
+
+    vecs, dist = scipy.cluster.vq.vq(array, bgm.means_)
+    counts, bins = np.histogram(vecs, len(bgm.means_))
+    
+    return bgm.means_, bgm.weights_, counts, vecs, shape, array
+
+def k_means_clustering(image, num_clusters):
+    # img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    
+    
+    img = cv2.resize(image, (150,150))
+
+    ar = np.asarray(img)
+    shape = ar.shape
+    ar = ar.reshape(np.product(shape[:2]), shape[2]).astype(float)
+
+    print('finding clusters')
+    codes, dist = scipy.cluster.vq.kmeans(ar, num_clusters)
+    print('cluster centres:\n', codes)
+
+    vecs, dist = scipy.cluster.vq.vq(ar, codes)         # assign codes
+    counts, bins = np.histogram(vecs, len(codes))    # count occurrences
+
+    index_max = np.argmax(counts)                    # find most frequent
+    peak = codes[index_max]
+    colour = binascii.hexlify(bytearray(int(c) for c in peak)).decode('ascii')
+    print('most frequent is %s (#%s)' % (peak, colour))
+
+    return codes, ar, vecs, shape, counts

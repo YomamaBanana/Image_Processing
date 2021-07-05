@@ -128,11 +128,12 @@ def main():
                     src = cv2.imread(str(img_path))
                     img_width, img_height = src.shape[1], src.shape[0]
                     src_main = imutils.resize(src, height=max(min(600, img_height),540))
+                    src_copy = imutils.resize(src, height=max(min(600, img_height),540))
                     # src_main = cv2.resize(src, (640,480))
-                    src_copy = np.copy(src_main)
+                    # src_copy = np.copy(src_main)
                     src_resize = imutils.resize(src, width=235)
                     window["-none-"].update(value=True)
-                    window['-modify_img-'].update(data=cv2.imencode('.png', src)[1].tobytes())
+                    window['-modify_img-'].update(data=cv2.imencode('.png', src_main)[1].tobytes())
                     window["-out_path-"].update(value=str(values["-TREE-"][0].replace('.jpg', '_modified.jpg').replace('.png', '_modified.png').replace('.jpeg', 'modified_.jpeg')))
                     
                     _, _, hist_bytes = draw_hist(src_copy)
@@ -275,14 +276,19 @@ def main():
         
         
         ### TAB2 PROCESS
-        
+        check_rgb = False
         if values["-TAB GROUP-"] == "Color_Separation":
             try:
                 t2_img = imutils.resize(mod_img, width=235)
                 window["t2-image"].update(data=cv2.imencode('.png', t2_img)[1].tobytes())
+                t2_copy = np.copy(t2_img)
             except:
-                print("SHITE")
-                
+                pass
+
+            if not check_rgb:
+                t2_copy[:,:,[0,2]] = t2_copy[:,:,[2,0]]
+                check_rgb = True
+
             if event == "plot_elbow":
                 try:
                     max_cluster = int(values["t2-max_clus"])                    
@@ -290,8 +296,8 @@ def main():
                     window["elbow"].update(data=eblow)
                     z, d1, d2 = polyfit3d(x,y)
                     print(d1,d2)                    
-                    for idx, win in enumerate(["poly_a", "poly_b", "poly_c", "poly_d"]):
-                        window[win].update(round(z[idx],2))
+                    # for idx, win in enumerate(["poly_a", "poly_b", "poly_c", "poly_d"]):
+                        # window[win].update(round(z[idx],2))
                     
                     for idx, win in enumerate(["roots_1", "roots_2", "roots_3"]):
                         print(idx)
@@ -304,9 +310,41 @@ def main():
                                 window[win].update("complex")
                 except Exception as er:                    
                     print(er)
+            
+            elif event == "apply_kmeans":
+                try:
+                    num_cluster = int(values["kmeans_num"])
+                except:
+                    pass
                 
-        
-        
+                if clustering_methhod == 0:
+                    centroids, array, vecs, shape, counts = k_means_clustering(t2_copy, num_cluster)    
+                elif clustering_methhod == 1:
+                    centroids, wieghts, counts, vecs, shape, array = gaussian_mixture(t2_copy)
+                
+                rgb_list, counts_list, indices,color_plot = plot_color_histogram(centroids, counts)
+                window["color"].update(data=color_plot)
+
+                window["table"].update(values=rgb_list)
+
+
+                
+            if event == "plot_top5":
+                
+                for color in range(1, min(7,len(centroids)+1)):
+                    idx = color - 1
+                    window[f"top{color}"].update(data=None)
+                    fig = plot_top_colors(rgb_list[idx], idx, array, vecs, shape, counts, indices)
+                    window[f"top{color}"].update(data=fig)
+                
+            if values["clus_method"] == "BayesianGaussianMixture":
+                window["kmeans_num"].update(text_color="gray", disabled=True)
+                clustering_methhod = 1
+            else:
+                window["kmeans_num"].update(text_color="white", disabled=False)
+                clustering_methhod = 0
+                                
+            
         update_lower_color()
         update_upper_color()
         update_slider_values()
