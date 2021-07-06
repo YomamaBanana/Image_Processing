@@ -325,7 +325,20 @@ def main():
                 rgb_list, counts_list, indices,color_plot = plot_color_histogram(centroids, counts)
                 window["color"].update(data=color_plot)
 
-                window["table"].update(values=rgb_list)
+
+
+                table_list = np.zeros((len(rgb_list),5), dtype=object)
+
+                for idx, rgb in enumerate(rgb_list):
+                    table_list[idx,0] = int(idx+1)
+                    table_list[idx,1] = int(rgb[0])
+                    table_list[idx,2] = int(rgb[1])
+                    table_list[idx,3] = int(rgb[2])
+                    table_list[idx,4] = round((100*counts_list[idx]/np.sum(counts_list)),1)
+                    
+                window["table"].update(values=table_list.tolist())
+
+
 
 
                 

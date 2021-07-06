@@ -3,6 +3,8 @@ import PySimpleGUI as sg
 import cv2, io
 import matplotlib.pyplot as plt
 
+from utils import *
+
 import scipy
 import scipy.cluster
 import numpy as np
@@ -59,9 +61,11 @@ def tab2_layout():
     ], vertical_alignment='top')
     
     table_column = [
-        "Color",
-        "RGB",
-        "%"
+        "Index",
+        "  R ",
+        "  G ",
+        "  B ",
+        "  %  "
     ]
     
     image_layout = [
@@ -73,9 +77,15 @@ def tab2_layout():
             [clustering_layout],
             # [],
             [sg.Image(filename="", key="t2-image", enable_events=True)],
-            [sg.Table(values=[[100,100,100]], headings=table_column, max_col_width=10, num_rows=15, k="table",
-                                          auto_size_columns=False,
-                    display_row_numbers=True, col_widths =5)]
+            [sg.Table(
+                values=[[0,0,0,0,0]], 
+                headings=table_column, 
+                max_col_width=5, 
+                num_rows=15, 
+                k="table",
+                auto_size_columns=True,
+                display_row_numbers=False, 
+                col_widths = 2)]
             ]
     
     elbow_layout = [
@@ -142,25 +152,46 @@ def main():
             d1, d2 = polyfit3d(x,y)
             print(d1,d2)
         
-        if event == "plot_top5":
-            # for i in [f"top{x}" for x in range(1,6)]:
-                # window[i].update(data=img_bytes)
-
-            centroids, wieghts, hist_counts, vecs = gaussian_mixture(array)
-            rgb, count, color_plot = plot_histogram(centroids, hist_counts)
-
-            window["color"].update(data=color_plot)
-
-            top_colors = []
-
-            for color in range(1,6):
-                fig = plot_top_colors(centroids[color], color, array, vecs, shape)
-                window[f"top{color}"].update(data=fig)
+        
+        if values["clus_method"] == "BayesianGaussianMixture":
+            window["kmeans_num"].update(text_color="gray", disabled=True)
+            clustering_methhod = 1
+        else:
+            window["kmeans_num"].update(text_color="white", disabled=False)
+            clustering_methhod = 0
+        
             
         if event == "image":
             print("Testing")
 
 
+        elif event == "apply_kmeans":
+            try:
+                num_cluster = int(values["kmeans_num"])
+            except:
+                pass
+            
+                                
+            
+            if clustering_methhod == 0:
+                centroids, array, vecs, shape, counts = k_means_clustering(img, num_cluster)    
+            elif clustering_methhod == 1:
+                centroids, wieghts, counts, vecs, shape, array = gaussian_mixture(img)
+            
+            rgb_list, counts_list, indices,color_plot = plot_color_histogram(centroids, counts)
+            window["color"].update(data=color_plot)
+
+
+            tmp = np.zeros((len(rgb_list),5), dtype=object)
+
+            for idx, rgb in enumerate(rgb_list):
+                tmp[idx,0] = int(idx+1)
+                tmp[idx,1] = int(rgb[0])
+                tmp[idx,2] = int(rgb[1])
+                tmp[idx,3] = int(rgb[2])
+                tmp[idx,4] = round((100*counts_list[idx]/np.sum(counts_list)),1)
+                
+            window["table"].update(values=tmp.tolist())
 
 
 if __name__ == "__main__":
