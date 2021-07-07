@@ -294,20 +294,20 @@ def main():
                     max_cluster = int(values["t2-max_clus"])                    
                     x,y,eblow = elbow_plot(t2_img, max_clusters=max_cluster)
                     window["elbow"].update(data=eblow)
-                    z, d1, d2 = polyfit3d(x,y)
-                    print(d1,d2)                    
+                    # z, d1, d2 = polyfit3d(x,y)
+                    # print(d1,d2)                    
                     # for idx, win in enumerate(["poly_a", "poly_b", "poly_c", "poly_d"]):
                         # window[win].update(round(z[idx],2))
                     
-                    for idx, win in enumerate(["roots_1", "roots_2", "roots_3"]):
-                        print(idx)
-                        if idx == 2:
-                            window[win].update(round(d2[0],2))
-                        else:
-                            if not np.iscomplex(d1[idx]): 
-                                window[win].update(round(d1[idx],2))
-                            else:
-                                window[win].update("complex")
+                    # for idx, win in enumerate(["roots_1", "roots_2", "roots_3"]):
+                    #     print(idx)
+                    #     if idx == 2:
+                    #         window[win].update(round(d2[0],2))
+                    #     else:
+                    #         if not np.iscomplex(d1[idx]): 
+                    #             window[win].update(round(d1[idx],2))
+                    #         else:
+                    #             window[win].update("complex")
                 except Exception as er:                    
                     print(er)
             
@@ -337,10 +337,6 @@ def main():
                     table_list[idx,4] = round((100*counts_list[idx]/np.sum(counts_list)),1)
                     
                 window["table"].update(values=table_list.tolist())
-
-
-
-
                 
             if event == "plot_top5":
                 
@@ -356,6 +352,14 @@ def main():
             else:
                 window["kmeans_num"].update(text_color="white", disabled=False)
                 clustering_methhod = 0
+
+            if event == "table":
+                # print(values["table"])
+                idx = int(values["table"][0])
+                fig = plot_top_colors(rgb_list[idx], idx, array, vecs, shape, counts, indices)
+                window[f"top1"].update(data=fig)
+                
+                        
                                 
             
         update_lower_color()

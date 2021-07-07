@@ -43,34 +43,20 @@ def tab2_layout():
     
     clustering_layout = sg.Column([
         [sg.Combo(clustering_methods, default_value=clustering_methods[0], k="clus_method")],
-        [sg.Text("Number of Clusters"), sg.InputText("5", size=(4,1), k ="kmeans_num"), sg.Button("Run", k="apply_kmeans")]
+        [sg.Text("Number of Clusters: "), sg.InputText("5", size=(4,1), k ="kmeans_num"), sg.Button("Run", k="apply_kmeans")]
         ])
     
-    poly_layout = sg.Column([
-            [sg.Text("ax^3: ",size=(5,1), justification='right'), sg.InputText("a",size=(5,4), background_color="gray",text_color="black", disabled=True, k="poly_a", justification='right')],
-            [sg.Text("bx^2: ",size=(5,1), justification='right'), sg.InputText("b",size=(5,4), background_color="gray",text_color="black", disabled=True, k="poly_b", justification='right')],
-            [sg.Text("cx: ",size=(5,1), justification='right'), sg.InputText("c",size=(5,4), background_color="gray",text_color="black", disabled=True, k="poly_c", justification='right')],
-            [sg.Text("d: ",size=(5,1), justification='right'), sg.InputText("d",size=(5,4), background_color="gray",text_color="black", disabled=True, k="poly_d", justification='right')],       
-    ], vertical_alignment='top')
-    
-    roots_layout = sg.Column([
-        [sg.Text("",size=(8,1)),sg.Text("x",size=(3,1), justification='right')],
-        [sg.Text("Extrema",size=(8,1), justification='right'), sg.InputText("a",size=(5,4), background_color="gray",text_color="black", disabled=True, k="roots_1", justification='right')],
-        [sg.Text("",size=(8,1), justification='right'), sg.InputText("a",size=(5,4), background_color="gray",text_color="black", disabled=True, k="roots_2", justification='right')],
-        [sg.Text("Points of Inflection",size=(8,2), justification='right'), sg.InputText("a",size=(5,4), background_color="gray",text_color="black", disabled=True, k="roots_3", justification='right')], 
-    ], vertical_alignment='top')
-    
     table_column = [
-        "Index",
-        "  R ",
-        "  G ",
-        "  B ",
+        "IDX",
+        "  R  ",
+        "  G  ",
+        "  B  ",
         "  %  "
     ]
     
     image_layout = [
             [sg.Text("===== ELBOW PLOT =====")],
-            [sg.Text("Max num of clusters: "), sg.InputText(default_text="20", size=(6,4), k="t2-max_clus", justification='right'), sg.Button('Plot', k="plot_elbow")],
+            [sg.Text("Max num of clusters: "), sg.InputText(default_text="20", size=(4,4), k="t2-max_clus", justification='right'), sg.Button('Plot', k="plot_elbow")],
             # [sg.Text("3rd degree approximation:")],
             # [poly_layout, roots_layout],
             [sg.Text("===== COLOR CLUSTERS =====")],
@@ -81,20 +67,22 @@ def tab2_layout():
                 values=[[0,0,0,0,0]], 
                 headings=table_column, 
                 max_col_width=5, 
-                num_rows=15, 
+                num_rows=10, 
                 k="table",
                 auto_size_columns=True,
                 display_row_numbers=False, 
-                col_widths = 2)]
+                col_widths = 2,
+                enable_events=True)]
             ]
     
     elbow_layout = [
-        [sg.Image(filename="", key ="elbow")],
-        [sg.Image(filename="", key ="color")]
+        [sg.Image(filename="", key ="color", size=(10,10))],
+        [sg.Image(filename="", key ="elbow")]
         ]
         
     col_1 = sg.Column([
         [sg.Frame("Main", image_layout)],        
+        [sg.Multiline(size=(33,12), disabled=True, background_color="black",font='courier 8', key='-t2_ML-')]
         ], vertical_alignment='top')
     
     col_2 = sg.Column([

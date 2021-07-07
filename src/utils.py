@@ -157,7 +157,7 @@ def elbow_plot(image, max_clusters=20):
     y = np.array(distoration)
     
     plt.plot(x,y)
-    
+    plt.title("Elbow Graph")
     plt.ylabel("distortion")
     plt.xlabel("clusters (n)")
     # plt.xticks(range(1,max_clusters))
@@ -178,7 +178,6 @@ def polyfit3d(x,y):
 
     return z, order_1, order_2
 
-    
 def plot_top_colors(centroids, idx,array, vecs, shape, counts, indices):
     plt.style.use("dark_background")
     
@@ -219,6 +218,7 @@ def plot_color_histogram(centroids, counts):
     
     
     fig, axs = plt.subplots(col,row, figsize=(6,3))
+    fig.suptitle("Dominant Colors")
     fig.subplots_adjust(wspace=0.05, hspace=0.05)
     axs = axs.flatten()
     
@@ -237,7 +237,7 @@ def plot_color_histogram(centroids, counts):
             bbox={'facecolor':'white','alpha':1,'edgecolor':'none','pad':1},
             ha='center', va='center', fontsize=8, color="k")
         axs[i].imshow([[np.array(list1[i], dtype=int)]], aspect='auto')
-    
+    fig.tight_layout()
     item = io.BytesIO()
     plt.savefig(item, format="png")
     plt.close("all")
@@ -289,3 +289,4 @@ def k_means_clustering(image, num_clusters):
     print('most frequent is %s (#%s)' % (peak, colour))
 
     return codes, ar, vecs, shape, counts
+
