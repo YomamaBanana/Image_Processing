@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 from PIL import ImageColor
 import time
-
+from kneed import KneeLocator
+from sklearn.metrics import silhouette_score
 
 from utils import *
 from tab2 import tab2_layout
@@ -38,7 +39,7 @@ def define_layout():
 
 def main():  
     
-    sg.popup_quick_message('Loading... please wiat...', background_color='gray', text_color='white', font='Any 14') 
+    sg.popup_quick_message('Loading... please wiat...', background_color='darkblue', text_color='white', font='Any 14') 
     time.sleep(1)     
             
     def update_info():
@@ -116,7 +117,7 @@ def main():
             break
 
         elif event == "-browse_folder-":
-            sg.popup_quick_message('Updating folder... Please wiat...', background_color='gray', text_color='white', font='Any 14')
+            sg.popup_quick_message('Updating folder... Please wiat...', background_color='darkblue', text_color='white', font='Any 14')
             window["-TREE-"].update(values=get_tree_data("", values["-browse_folder-"]))
 
         elif event == "-TREE-":
@@ -203,7 +204,7 @@ def main():
             progress_bar.UpdateBar(0)
             
         elif event == "-refresh-":
-            sg.popup_quick_message('Updating folder... Please wiat...', background_color='gray', text_color='white', font='Any 14')
+            sg.popup_quick_message('Updating folder... Please wiat...', background_color='darkblue', text_color='white', font='Any 14')
             
             window["-TREE-"].update(values=get_tree_data("", values["-browse_folder-"]))
             
@@ -284,16 +285,26 @@ def main():
                 t2_copy = np.copy(t2_img)
             except:
                 pass
-
+            
             if not check_rgb:
-                t2_copy[:,:,[0,2]] = t2_copy[:,:,[2,0]]
+                try:
+                    t2_copy[:,:,[0,2]] = t2_copy[:,:,[2,0]]
+                except:
+                    t2_copy = t2_copy
+                    
                 check_rgb = True
 
             if event == "plot_elbow":
                 try:
                     max_cluster = int(values["t2-max_clus"])                    
-                    x,y,eblow = elbow_plot(t2_img, max_clusters=max_cluster)
+                    x, y, eblow = elbow_plot(t2_img, max_clusters=max_cluster)
                     window["elbow"].update(data=eblow)
+                    
+                    kl = KneeLocator(range(1, max_cluster), y, curve="convex", direction="decreasing")
+                    
+                    
+                    print(kl.elbow)
+                    
                     # z, d1, d2 = polyfit3d(x,y)
                     # print(d1,d2)                    
                     # for idx, win in enumerate(["poly_a", "poly_b", "poly_c", "poly_d"]):
@@ -312,13 +323,44 @@ def main():
                     print(er)
             
             elif event == "apply_kmeans":
+                    
                 try:
+                    window['-t2_ML-'].print(log_now+" running...", end="")
                     num_cluster = int(values["kmeans_num"])
-                except:
-                    pass
+                    
+                except Exception as ex:
+                    window['-t2_ML-'].print(log_now, end="")
+                    window['-t2_ML-'].print(f'{str(type(ex).__name__)}', background_color='red',text_color='white', end='')
+                    window['-t2_ML-'].print(f' {ex.args[0]}. (expected: int)', text_color='red')
                 
                 if clustering_methhod == 0:
-                    centroids, array, vecs, shape, counts = k_means_clustering(t2_copy, num_cluster)    
+                    sg.popup_quick_message('Processing K-means ... ', background_color='darkblue', text_color='white', font='Any 14')
+                    centroids, array, vecs, shape, counts, kmeans = k_means_clustering(t2_copy, num_cluster)    
+                    
+
+                    score = silhouette_score(array, kmeans.labels_)
+                    index_max = np.argmax(counts)
+                    peak = centroids[index_max]
+
+
+                    window["-t2_ML-"].print(f"successful.", end="")
+                    window["-t2_ML-"].print("")
+
+                    window["-t2_ML-"].print("[Summary]", background_color='blue',text_color='white', end="")
+                    window["-t2_ML-"].print("")
+                    window["-t2_ML-"].print(" ", background_color="blue", end="")
+                    window["-t2_ML-"].print(f"n_iter: {kmeans.n_iter_}")
+                    window["-t2_ML-"].print(" ", background_color="blue", end="")
+                    window["-t2_ML-"].print(f"inertia: {kmeans.inertia_:.2f}")
+                    window["-t2_ML-"].print(" ", background_color="blue", end="")
+                    window["-t2_ML-"].print(f"silhoette score: {score:.2f}")
+                    window["-t2_ML-"].print(" ", background_color="blue", end="")
+                    window["-t2_ML-"].print(f"most frequent: {np.array(peak, dtype=int)}")
+                    window["-t2_ML-"].print("[--END--]", background_color='blue',text_color='white', end="")
+                    window["-t2_ML-"].print("")
+
+
+
                 elif clustering_methhod == 1:
                     centroids, wieghts, counts, vecs, shape, array = gaussian_mixture(t2_copy)
                 
@@ -354,11 +396,12 @@ def main():
                 clustering_methhod = 0
 
             if event == "table":
-                # print(values["table"])
                 idx = int(values["table"][0])
                 fig = plot_top_colors(rgb_list[idx], idx, array, vecs, shape, counts, indices)
-                window[f"top1"].update(data=fig)
+                window[f"show_color"].update(data=fig)
                 
+                mask = plot_mask(rgb_list[idx], idx, array, vecs, shape, counts, indices)
+                window[f"show_mask"].update(data=mask)
                         
                                 
             

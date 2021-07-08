@@ -160,8 +160,7 @@ def elbow_plot(image, max_clusters=20):
     plt.title("Elbow Graph")
     plt.ylabel("distortion")
     plt.xlabel("clusters (n)")
-    # plt.xticks(range(1,max_clusters))
-    # plt.yticks(range(0,100))
+    plt.xticks(range(1,max_clusters))
     
     item = io.BytesIO()
     plt.savefig(item, format="png")
@@ -184,11 +183,32 @@ def plot_top_colors(centroids, idx,array, vecs, shape, counts, indices):
     ratio = 100*counts[indices[idx]]/np.sum(counts)
         
     plt.clf()
-    plt.figure(figsize=(2,2))
+    plt.figure(figsize=(3,3))
     plt.axis("off")
-    plt.title(f"TOP {idx+1}: {ratio[0]:.1f}%")
-    res = np.ones_like(array)
+    plt.title(f"IDX {idx+1}: {ratio[0]:.1f}%", fontsize=10)
+    
+    res = np.zeros_like(array)
     res[scipy.r_[np.where(vecs==indices[idx])],:] = centroids
+    res = np.array(res.reshape(*shape), dtype=int) 
+    plt.imshow(res)
+
+    item = io.BytesIO()
+    plt.savefig(item, format="png")
+    plt.close("all")
+    
+    return item.getvalue()
+
+def plot_mask(centroids, idx,array, vecs, shape, counts, indices):
+    plt.style.use("dark_background")
+    
+        
+    plt.clf()
+    plt.figure(figsize=(3,3))    
+    plt.title("Mask", fontsize=10)
+    
+    plt.axis("off")
+    res = np.zeros_like(array)
+    res[scipy.r_[np.where(vecs==indices[idx])],:] = 255
     res = np.array(res.reshape(*shape), dtype=int) 
     plt.imshow(res)
 
@@ -222,8 +242,6 @@ def plot_color_histogram(centroids, counts):
     fig.subplots_adjust(wspace=0.05, hspace=0.05)
     axs = axs.flatten()
     
-    axs[0].set_ylabel("R\nG\nB", rotation=0)
-    
     for i in range(len(new_center)):
         
         percentage = 100*list2[i]/np.sum(list2)
@@ -232,10 +250,6 @@ def plot_color_histogram(centroids, counts):
         axs[i].set_xticks([])
         axs[i].set_yticks([])
         axs[i].set_xlabel(i+1)
-        for idx, x in enumerate(np.array(list1[i], dtype=int)):
-            axs[i].text(0,idx*0.1-0.2,f'{x}',
-            bbox={'facecolor':'white','alpha':1,'edgecolor':'none','pad':1},
-            ha='center', va='center', fontsize=8, color="k")
         axs[i].imshow([[np.array(list1[i], dtype=int)]], aspect='auto')
     fig.tight_layout()
     item = io.BytesIO()
@@ -267,26 +281,23 @@ def gaussian_mixture(image, *params):
     return bgm.means_, bgm.weights_, counts, vecs, shape, array
 
 def k_means_clustering(image, num_clusters):
-    # img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    
     
     img = cv2.resize(image, (150,150))
 
     ar = np.asarray(img)
     shape = ar.shape
+    
     ar = ar.reshape(np.product(shape[:2]), shape[2]).astype(float)
-
-    print('finding clusters')
-    codes, dist = scipy.cluster.vq.kmeans(ar, num_clusters)
-    print('cluster centres:\n', codes)
+    
+    from sklearn.cluster import KMeans
+    kmeans = KMeans(
+        n_clusters=num_clusters).fit(ar)
+    
+    codes = kmeans.cluster_centers_
 
     vecs, dist = scipy.cluster.vq.vq(ar, codes)         # assign codes
     counts, bins = np.histogram(vecs, len(codes))    # count occurrences
 
-    index_max = np.argmax(counts)                    # find most frequent
-    peak = codes[index_max]
-    colour = binascii.hexlify(bytearray(int(c) for c in peak)).decode('ascii')
-    print('most frequent is %s (#%s)' % (peak, colour))
 
-    return codes, ar, vecs, shape, counts
+    return codes, ar, vecs, shape, counts, kmeans
 
