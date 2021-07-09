@@ -1,4 +1,4 @@
-# Python_GUI
+# Image_Processingv2.2
 
 An image processing GUI  written in python.
 
@@ -26,7 +26,7 @@ And them photos are from the [FLIR dataset](https://www.flir.com/oem/adas/adas-d
 
 1. Enable objection detection.
 2. Labelling option (maybe?)
-3. Color separation (WHOA)
+3. ~~Color separation (WHOA)~~
 4. Features Extraction (oh yea)
 5. Image Search Engine (HOT!)
 
