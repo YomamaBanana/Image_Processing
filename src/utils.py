@@ -9,6 +9,8 @@ import binascii
 from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
 from sklearn.mixture import BayesianGaussianMixture
 
+from sklearn.cluster import KMeans
+
 plt.style.use('dark_background')
 plt.rcParams['lines.linewidth'] = 0.6
 plt.rcParams['ytick.left'] = False
@@ -140,7 +142,6 @@ def elbow_plot(image, max_clusters=20):
     plt.rcParams['ytick.labelleft'] = True
     
     plt.figure(figsize=(6,4))
-    import pandas as pd
     import numpy as np
     
     array = np.asarray(image)
@@ -149,16 +150,18 @@ def elbow_plot(image, max_clusters=20):
     array = array.reshape(np.product(shape[:2]), shape[2]).astype(float)
     
     distoration = []    
+    
     for cluster in range(1, max_clusters):
-        _, dist = scipy.cluster.vq.kmeans(array, cluster)
-        distoration.append(dist)
+        kmeans = KMeans(n_clusters=cluster)
+        kmeans.fit(array)
+        distoration.append(kmeans.inertia_)
 
     x = np.arange(1,max_clusters)
     y = np.array(distoration)
     
     plt.plot(x,y)
     plt.title("Elbow Graph")
-    plt.ylabel("distortion")
+    plt.ylabel("distance (euclidean )")
     plt.xlabel("clusters (n)")
     plt.xticks(range(1,max_clusters))
     
@@ -301,3 +304,15 @@ def k_means_clustering(image, num_clusters):
 
     return codes, ar, vecs, shape, counts, kmeans
 
+def empty_plot(w, h, text):
+    plt.style.use("dark_background")
+    plt.clf()
+    plt.figure(figsize=(w,h))    
+    plt.axis("off")
+    plt.text(0.5,0,text,bbox={'facecolor':'black','alpha':1,'edgecolor':'none','pad':1},
+          ha='center', va='center')
+    item = io.BytesIO()
+    plt.savefig(item, format="png")
+    plt.close("all")
+    
+    return item.getvalue()

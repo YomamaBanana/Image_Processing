@@ -72,7 +72,7 @@ def tab2_layout():
     ], vertical_alignment='top')
     
     col_3 = sg.Column([
-        [sg.Frame("TOP5", top5_layout)]
+        [sg.Frame("Results", top5_layout)]
         ], vertical_alignment='top')
     
     layout = [[col_1, col_2, col_3]]
