@@ -1,11 +1,9 @@
 import PySimpleGUI as sg
 import os, cv2, io
 import matplotlib.pyplot as plt
-from scipy import fftpack
 import scipy
 import scipy.cluster
 import numpy as np
-import binascii
 from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
 from sklearn.mixture import BayesianGaussianMixture
 
