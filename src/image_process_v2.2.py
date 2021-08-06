@@ -17,7 +17,6 @@ from tab1 import tab1_layout
 
 plt.style.use('dark_background')
 plt.rcParams['lines.linewidth'] = 0.6
-plt.rcParams['ytick.labelleft'] = False
 plt.rcParams['axes.titlesize'] = 10
 
 def define_layout():    
@@ -97,16 +96,13 @@ def main():
          resizable=True, 
         element_justification="left").Finalize()
     
-    print("PWD::", os.getcwd())
-
-    def_img = cv2.imread("data/img/default.png")
-    def_img = cv2.resize(def_img, (640,540))
-    def_bytes = cv2.imencode('.png', def_img)[1].tobytes()
+    def_img = cv2.imread("data/img/default.png")    
+    def_bytes = plot_image(def_img)
     window["-modify_img-"].update(data=def_bytes)
     
     hsv_cyclinder = cv2.imread("data/img/hsv_cyclinder.png")
 
-    window["-browse_folder-"].update(value=r"D:\Python\git\Python_GUI\data")
+    window["-browse_folder-"].update(value=f"{os.path.join(os.getcwd(),'data')}")
 
     check_image_ok, t2_init = False, True
 
@@ -133,12 +129,14 @@ def main():
                     src = cv2.imread(str(img_path))
                     img_width, img_height = src.shape[1], src.shape[0]
                     src_main = imutils.resize(src, height=max(min(600, img_height),540))
-                    src_copy = imutils.resize(src, height=max(min(600, img_height),540))
+                    # src_copy = imutils.resize(src, height=max(min(600, img_height),540))
+                    src_copy = src
                     # src_main = cv2.resize(src, (640,480))
                     # src_copy = np.copy(src_main)
                     src_resize = imutils.resize(src, width=235)
                     window["-none-"].update(value=True)
-                    window['-modify_img-'].update(data=cv2.imencode('.png', src_main)[1].tobytes())
+                    window['-modify_img-'].update(data=plot_image(src))
+                    # window['-modify_img-'].update(data=cv2.imencode('.png', src_main)[1].tobytes())
                     window["-out_path-"].update(value=str(values["-TREE-"][0].replace('.jpg', '_modified.jpg').replace('.png', '_modified.png').replace('.jpeg', 'modified_.jpeg')))
                     
                     _, _, hist_bytes = draw_hist(src_copy)
@@ -277,7 +275,7 @@ def main():
             else:
                 check_canny = False
 
-            window['-modify_img-'].update(data=cv2.imencode('.png', mod_img)[1].tobytes())
+            window['-modify_img-'].update(data=plot_image(mod_img))
         
         
         ### TAB2 PROCESS

@@ -11,7 +11,20 @@ from sklearn.cluster import KMeans
 
 plt.style.use('dark_background')
 plt.rcParams['lines.linewidth'] = 0.6
-plt.rcParams['ytick.left'] = False
+# plt.rcParams['ytick.left'] = False
+
+def plot_image(image):
+    # img = cv2.imread(image_path)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    fig, ax = plt.subplots(1,1,figsize=(6,4.5))
+    ax.imshow(image)
+    fig.tight_layout()
+    
+    item = io.BytesIO()
+    fig.savefig(item, format='png') 
+    plt.clf()
+    plt.close('all')
+    return item.getvalue()
 
 def get_tree_data(parent, dirname):
     treedata = sg.TreeData()
