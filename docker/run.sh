@@ -9,7 +9,6 @@ xhost + > /dev/null 2>&1
 xhost local: > /dev/null 2>&1
 # docker run --gpus='"device=1"' -ti --rm \
 docker run -ti --rm \
-    --shm-size=1024m \
     --volume="${DOCKER_SCRIPT_DIR}/..:/home/${D_UNAME}/ImageProcessing" \
     --net=host \
     --env=DISPLAY=$DISPLAY \
