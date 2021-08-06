@@ -97,12 +97,14 @@ def main():
          resizable=True, 
         element_justification="left").Finalize()
     
-    def_img = cv2.imread("../data/img/default.png")
+    print("PWD::", os.getcwd())
+
+    def_img = cv2.imread("data/img/default.png")
     def_img = cv2.resize(def_img, (640,540))
     def_bytes = cv2.imencode('.png', def_img)[1].tobytes()
     window["-modify_img-"].update(data=def_bytes)
     
-    hsv_cyclinder = cv2.imread("../data/img/hsv_cyclinder.png")
+    hsv_cyclinder = cv2.imread("data/img/hsv_cyclinder.png")
 
     window["-browse_folder-"].update(value=r"D:\Python\git\Python_GUI\data")
 
