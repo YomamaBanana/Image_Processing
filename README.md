@@ -1,7 +1,6 @@
 # Image_Processingv2.2
 
-An image processing GUI  written in python.
-
+An image processing GUI written in python. 
 Nothing magical.
 
 Just getting started on my personal project.
@@ -10,11 +9,34 @@ Just getting started on my personal project.
 
 The main objective of this image processing GUI is to provide a quick and dirty way for the effect of different algorithms including but not limited to:
 
-1. Thresholding
-2. Gaussian Blur
-3. Denoise
-4. Enhance
-5. Canny Edge Detection etc.
+# Enviornment
+* Ubuntu 18.04 (WSL) 
+* Python3.6
+* cuda 10.0
+
+# Setup
+Create docker image.
+```sh
+sudo bash setup.sh
+```
+Enter the docker environment.
+```sh
+sudo bash docker/run.sh
+```
+Change directory
+```sh
+cd ImageProcessing/
+```
+Start the program
+```sh
+bash image_process.sh
+```
+Exit the docker image.
+```sh
+exit
+```
+
+
 
 # BE WARNED!
 
