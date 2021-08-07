@@ -14,6 +14,7 @@ from sklearn.metrics import silhouette_score
 from utils import *
 from tab2 import tab2_layout
 from tab1 import tab1_layout
+from tab3 import tab3_layout
 
 plt.style.use('dark_background')
 plt.rcParams['lines.linewidth'] = 0.6
@@ -32,9 +33,11 @@ def define_layout():
 
     tab1 = tab1_layout()
     tab2 = tab2_layout()
+    tab3 = tab3_layout()
 
     layout +=[[sg.TabGroup([[   sg.Tab('Image_Processing', tab1),
-                                sg.Tab('Color_Separation', tab2)
+                                sg.Tab('Color_Separation', tab2),
+                                sg.Tab('YOLOv3', tab3)
                                 ]], key='-TAB GROUP-')]]
     
     return layout
@@ -305,8 +308,6 @@ def main():
                 sg.popup_ok("No image seleted.\nPress OK to continue... ",title="WARNING!")
                 window["-TAB GROUP-"].Widget.select(0)
 
-                
-                
             if not check_rgb:
                 try:
                     t2_copy[:,:,[0,2]] = t2_copy[:,:,[2,0]]
@@ -422,7 +423,102 @@ def main():
                     window['-t2_ML-'].print('WARNING:',text_color='yellow', end='')
                     window['-t2_ML-'].print(" No cluster found.", text_color='yellow')
                     
+        
+        ### TAB3 PROCESS
+        if values["-TAB GROUP-"] == "YOLOv3":
+            try:
+                t2_img = imutils.resize(mod_img, width=235)
+                (H, W) = t2_img.shape[:2]
+                window["show_image"].update(data=cv2.imencode('.png', t2_img)[1].tobytes())
+                t2_copy = np.copy(t2_img)
+            except Exception as er:
+                sg.popup_ok("No image seleted.\nPress OK to continue... ",title="WARNING!")
+                window["-TAB GROUP-"].Widget.select(0)
+
+            if event == "run":
+                labels = os.path.join(values["network"], "coco.names")
+                cfg = os.path.join(values["network"], "yolov3.cfg")
+                weights = os.path.join(values["network"], "yolov3.weights")
                 
+                print("[INFO] loading YOLO from disk...", end="\r")
+                net = cv2.dnn.readNetFromDarknet(cfg, weights)
+                print("[INFO] loading YOLO from disk... done.")
+
+                img = t2_img.copy()
+
+                def run_yolo():
+                    ln = net.getLayerNames()
+                    ln = [ln[i[0] - 1] for i in net.getUnconnectedOutLayers()]
+                    blob = cv2.dnn.blobFromImage(img, 1 / 255.0, (416, 416),
+                    swapRB=True, crop=False)
+                    net.setInput(blob)
+                    start = time.time()
+                    layerOutputs = net.forward(ln)
+                    end = time.time()
+
+                    LABELS = open(labels).read().strip().split("\n")
+
+                    COLORS = np.random.randint(0, 255, size=(len(LABELS), 3),
+                        dtype="uint8")
+
+                    # show timing information on YOLO
+                    print("[INFO] YOLO took {:.6f} seconds".format(end - start))
+                    boxes = []
+                    confidences = []
+                    classIDs = []
+
+                    # loop over each of the layer outputs
+                    for output in layerOutputs:
+                        # loop over each of the detections
+                        for detection in output:
+                            # extract the class ID and confidence (i.e., probability) of
+                            # the current object detection
+                            scores = detection[5:]
+                            classID = np.argmax(scores)
+                            confidence = scores[classID]
+
+                            # filter out weak predictions by ensuring the detected
+                            # probability is greater than the minimum probability
+                            if confidence > 0.5:
+                                # scale the bounding box coordinates back relative to the
+                                # size of the image, keeping in mind that YOLO actually
+                                # returns the center (x, y)-coordinates of the bounding
+                                # box followed by the boxes' width and height
+                                box = detection[0:4] * np.array([W, H, W, H])
+                                (centerX, centerY, width, height) = box.astype("int")
+
+                                # use the center (x, y)-coordinates to derive the top and
+                                # and left corner of the bounding box
+                                x = int(centerX - (width / 2))
+                                y = int(centerY - (height / 2))
+
+                                # update our list of bounding box coordinates, confidences,
+                                # and class IDs
+                                boxes.append([x, y, int(width), int(height)])
+                                confidences.append(float(confidence))
+                                classIDs.append(classID)
+
+                    idxs = cv2.dnn.NMSBoxes(boxes, confidences, 0.5, 0.5)
+                
+                    if len(idxs) > 0:
+                        # loop over the indexes we are keeping
+                        for i in idxs.flatten():
+                            # extract the bounding box coordinates
+                            (x, y) = (boxes[i][0], boxes[i][1])
+                            (w, h) = (boxes[i][2], boxes[i][3])
+
+                            # draw a bounding box rectangle and label on the image
+                            color = [int(c) for c in COLORS[classIDs[i]]]
+                            cv2.rectangle(img, (x, y), (x + w, y + h), color, 2)
+                            text = "{}: {:.4f}".format(LABELS[classIDs[i]], confidences[i])
+                            cv2.putText(img, text, (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX,
+                                0.5, color, 2)
+                
+                run_yolo()
+                
+                imgbytes = cv2.imencode('.png', img)[1].tobytes()
+                window["yolo_image"].update(data=imgbytes)
+
         update_lower_color()
         update_upper_color()
         update_slider_values()
