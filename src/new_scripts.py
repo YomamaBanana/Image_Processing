@@ -1,11 +1,7 @@
-import pathlib
-from matplotlib import colors
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 import binascii
-import struct
-from PIL import Image
 import numpy as np
 import scipy
 import scipy.misc
