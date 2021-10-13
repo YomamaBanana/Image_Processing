@@ -99,13 +99,13 @@ def main():
          resizable=True, 
         element_justification="left").Finalize()
     
-    def_img = cv2.imread("data/img/default.png")    
+    def_img = cv2.imread("../data/img/default.png")    
     def_bytes = plot_image(def_img)
     window["-modify_img-"].update(data=def_bytes)
     
-    hsv_cyclinder = cv2.imread("data/img/hsv_cyclinder.png")
+    hsv_cyclinder = cv2.imread("../data/img/hsv_cyclinder.png")
 
-    window["-browse_folder-"].update(value=f"{os.path.join(os.getcwd(),'data')}")
+    window["-browse_folder-"].update(value=f"{os.path.join(os.getcwd(),'../data')}")
 
     check_image_ok, t2_init = False, True
 
